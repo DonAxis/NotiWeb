@@ -1,11 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NotiWeb</title>
+  <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
-    empecemos
+
+  <!-- ENCABEZADO -->
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="index.html" class="logo">NOTI<span>WEB</span></a>
+      <nav class="nav-principal">
+        <a href="#">Últimas noticias</a>
+        <a href="#">Escolares</a>
+        <a href="#">Salud</a>
+        <a href="#">Tecnología</a>
+        <a href="#">Medio ambiente</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <!-- SECCIÓN: ÚLTIMAS NOTICIAS -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">ÚLTIMAS NOTICIAS</h2>
+      <div class="grid-principal">
+
+        <!-- Artículo destacado grande -->
+        <article class="articulo articulo-grande" style="background-color: #3a3a3a;">
+          <div class="articulo-overlay">
+            <p class="articulo-titulo">Nuevo hallazgo redefine cómo se propagan las bacterias resistentes a antibióticos</p>
+          </div>
+        </article>
+
+        <!-- 4 artículos pequeños -->
+        <div class="grid-secundario">
+          <article class="articulo" style="background-color: #5c3d5c;">
+            <div class="articulo-overlay">
+              <p class="articulo-titulo">Impulsan sororidad y derechos de las mujeres en comunidades rurales</p>
+            </div>
+          </article>
+          <article class="articulo" style="background-color: #2d4a5c;">
+            <div class="articulo-overlay">
+              <p class="articulo-titulo">Inaugura ESIME Culhuacán instalaciones deportivas de alto rendimiento</p>
+            </div>
+          </article>
+          <article class="articulo" style="background-color: #4a3d2d;">
+            <div class="articulo-overlay">
+              <p class="articulo-titulo">#8M Llaman a promover igualdad en espacios académicos y científicos</p>
+            </div>
+          </article>
+          <article class="articulo" style="background-color: #2d4a3d;">
+            <div class="articulo-overlay">
+              <p class="articulo-titulo">El Nacional Sub 23 de voleibol busca representantes para torneo internacional</p>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN: CIENCIA Y TECNOLOGÍA -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">CIENCIA Y TECNOLOGÍA</h2>
+      <div class="grid-dos">
+
+        <article class="articulo articulo-mediano" style="background-color: #3d2d4a;">
+          <div class="articulo-overlay">
+            <p class="articulo-titulo">Nuevo hallazgo redefine cómo inicia el Alzheimer en etapas tempranas</p>
+          </div>
+        </article>
+        <article class="articulo articulo-mediano" style="background-color: #5c2d3d;">
+          <div class="articulo-overlay">
+            <p class="articulo-titulo">"Hay que decirles a las jóvenes que sí pueden; somos la mitad del mundo": Ma. Isabel Salazar</p>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN: TE PUEDE INTERESAR -->
+    <section class="seccion interesar">
+      <h3 class="interesar-titulo">Te puede interesar...</h3>
+
+      <!-- Tabs de categorías -->
+      <div class="tabs">
+        <button class="tab activo" data-categoria="investigacion">INVESTIGACIÓN</button>
+        <button class="tab" data-categoria="salud">SALUD</button>
+        <button class="tab" data-categoria="tecnologia">TECNOLOGÍA</button>
+        <button class="tab" data-categoria="academia">ACADEMIA</button>
+        <button class="tab" data-categoria="ambiente">MEDIO AMBIENTE</button>
+      </div>
+
+      <!-- Carrusel -->
+      <div class="carrusel-contenedor">
+        <button class="carrusel-btn carrusel-prev" aria-label="Anterior">&#8249;</button>
+        <div class="carrusel">
+
+          <div class="tarjeta">
+            <div class="tarjeta-imagen" style="background-color: #4a3d5c;"></div>
+            <p class="tarjeta-titulo">"Vale la pena estudiar, te da herramientas que nadie te puede quitar..."</p>
+            <p class="tarjeta-desc">Profesora del CICATA considera esencial impulsar a cualquiera que tenga ímpetu científico.</p>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-imagen" style="background-color: #5c3d4a;"></div>
+            <p class="tarjeta-titulo">"México necesita ciencia y las mujeres estamos aquí para aportarla"</p>
+            <p class="tarjeta-desc">Es la primera mujer graduada del grupo de Hidrógeno del Cinvestav, abriendo espacios para otras.</p>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-imagen" style="background-color: #5c4a2d;"></div>
+            <p class="tarjeta-titulo">"Hay que esforzarse y no rendirse": joven gana olimpiada nacional de física</p>
+            <p class="tarjeta-desc">Esta joven es mentora en el CECyT 14 donde promueve la ciencia como espacio accesible.</p>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-imagen" style="background-color: #2d4a2d;"></div>
+            <p class="tarjeta-titulo">Investigadores desarrollan bioplástico a partir de residuos de agave</p>
+            <p class="tarjeta-desc">El material es biodegradable y podría reemplazar empaques industriales en menos de tres años.</p>
+          </div>
+
+        </div>
+        <button class="carrusel-btn carrusel-next" aria-label="Siguiente">&#8250;</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="pie">
+    <p>© 2026 NotiWeb — Ciencia al alcance de todos</p>
+  </footer>
+
+  <script src="js/articulos.js"></script>
 </body>
 </html>
