@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Escritor — Vigía Científico</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="../css/panel.css">
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <div class="panel-usuario">
+        <span id="nombre-usuario"></span>
+        <button id="btn-salir" class="btn-salir">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <section class="seccion">
+      <h2 class="seccion-titulo">NUEVO ARTÍCULO</h2>
+
+      <form id="form-articulo" class="formulario">
+
+        <div class="campo">
+          <label for="titulo">Título del reportaje</label>
+          <input type="text" id="titulo" maxlength="200" required placeholder="Título accesible para el lector">
+        </div>
+
+        <div class="campo">
+          <label for="categoria">Categoría</label>
+          <select id="categoria" required>
+            <option value="">Selecciona una categoría</option>
+            <option value="salud">Salud</option>
+            <option value="tecnologia">Tecnología</option>
+            <option value="medio-ambiente">Medio ambiente</option>
+            <option value="academia">Academia</option>
+            <option value="investigacion">Investigación</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="fuente">URL del artículo científico original</label>
+          <input type="url" id="fuente" required placeholder="https://doi.org/...">
+        </div>
+
+        <div class="campo">
+          <label for="imagen">Imagen del artículo</label>
+          <input type="file" id="imagen" accept="image/*" required>
+          <p class="campo-ayuda">Máximo 5 MB. JPG, PNG o WebP.</p>
+          <div id="vista-previa-contenedor" style="display:none;">
+            <img id="vista-previa" src="" alt="Vista previa" style="max-height:180px; margin-top:8px;">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="contenido">Texto del reportaje</label>
+          <textarea id="contenido" rows="12" maxlength="50000" required
+            placeholder="Escribe aquí el artículo en lenguaje accesible para el lector general..."></textarea>
+        </div>
+
+        <div class="form-acciones">
+          <p class="form-estado" id="form-estado"></p>
+          <button type="submit" class="btn-primario" id="btn-enviar">Enviar borrador</button>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- Lista de borradores propios -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">MIS BORRADORES</h2>
+      <div id="lista-borradores" class="lista-articulos">
+        <p class="lista-vacia">Cargando...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../js/escritor.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Editor — Vigía Científico</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="../css/panel.css">
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <div class="panel-usuario">
+        <span id="nombre-usuario"></span>
+        <button id="btn-salir" class="btn-salir">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <!-- Lista de borradores pendientes -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">BORRADORES PENDIENTES</h2>
+      <div id="lista-borradores" class="lista-articulos">
+        <p class="lista-vacia">Cargando...</p>
+      </div>
+    </section>
+
+    <!-- Vista detalle del artículo seleccionado -->
+    <section id="detalle-seccion" class="seccion" style="display:none;">
+      <h2 class="seccion-titulo">REVISAR ARTÍCULO</h2>
+
+      <div class="detalle-contenedor">
+        <img id="detalle-imagen" src="" alt="" class="detalle-imagen">
+        <div class="detalle-meta">
+          <p class="detalle-categoria" id="detalle-categoria"></p>
+          <h3 class="detalle-titulo" id="detalle-titulo"></h3>
+          <p class="detalle-fuente">Fuente científica: <a id="detalle-fuente" href="#" target="_blank" rel="noopener">ver artículo original</a></p>
+        </div>
+        <div class="detalle-contenido" id="detalle-contenido"></div>
+
+        <div class="detalle-acciones">
+          <p class="form-estado" id="detalle-estado"></p>
+          <button class="btn-secundario" id="btn-cerrar-detalle">Volver</button>
+          <button class="btn-primario" id="btn-publicar">Publicar artículo</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../js/editor.js"></script>
+</body>
+</html>
