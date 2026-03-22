@@ -12,13 +12,11 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 20px;
     }
     .login-caja {
       background: #fff;
       border-radius: 4px;
       padding: 40px 48px;
-      text-align: center;
       width: 100%;
       max-width: 380px;
     }
@@ -26,41 +24,69 @@
       font-size: 1.1rem;
       font-weight: 800;
       color: var(--rojo);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       letter-spacing: 0.05em;
+      text-align: center;
     }
     .login-subtitulo {
-      font-size: 0.85rem;
-      color: #666;
+      font-size: 0.82rem;
+      color: #888;
       margin-bottom: 28px;
+      text-align: center;
     }
-    .btn-google {
+    .campo {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      background: #fff;
-      border-radius: 2px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
     }
-    .btn-google:hover { background: #f5f5f5; }
-    .btn-google svg { width: 20px; height: 20px; }
+    .campo label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #444;
+    }
+    .campo input {
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      border-radius: 2px;
+      transition: border-color 0.2s;
+    }
+    .campo input:focus {
+      outline: none;
+      border-color: var(--rojo);
+    }
+    .btn-entrar {
+      width: 100%;
+      background: var(--rojo);
+      color: #fff;
+      border: none;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 2px;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-entrar:hover    { opacity: 0.85; }
+    .btn-entrar:disabled { opacity: 0.5; cursor: not-allowed; }
     .login-error {
       color: var(--rojo);
       font-size: 0.82rem;
-      margin-top: 16px;
+      margin-top: 14px;
+      text-align: center;
       display: none;
     }
     .login-cargando {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: #888;
-      margin-top: 16px;
+      margin-top: 14px;
+      text-align: center;
       display: none;
     }
   </style>
@@ -78,59 +104,63 @@
       <p class="login-titulo">ACCESO EDITORIAL</p>
       <p class="login-subtitulo">Solo para escritores y editores del portal</p>
 
-      <button class="btn-google" id="btn-google">
-        <!-- Ícono Google -->
-        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-          <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13 17.8 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 6.9-10 6.9-17z"/>
-          <path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.7 10.7l7.8-6z"/>
-          <path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.2 0-11.5-4.2-13.4-9.9l-7.8 6C6.6 42.6 14.6 48 24 48z"/>
-        </svg>
-        Entrar con Google
-      </button>
+      <form id="form-login">
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" required autocomplete="email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="campo">
+          <label for="contrasena">Contraseña</label>
+          <input type="password" id="contrasena" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-entrar" id="btn-entrar">Entrar</button>
+      </form>
 
-      <p class="login-error" id="login-error"></p>
+      <p class="login-error"   id="login-error"></p>
       <p class="login-cargando" id="login-cargando">Verificando acceso...</p>
     </div>
   </main>
 
   <script type="module">
-    import { auth, db }              from "../js/firebase.js";
-    import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-    import { doc, getDoc }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { auth, db }                              from "../js/firebase.js";
+    import { signInWithEmailAndPassword }            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+    import { doc, getDoc }                           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-    const btnGoogle    = document.getElementById("btn-google");
+    const formLogin    = document.getElementById("form-login");
+    const btnEntrar    = document.getElementById("btn-entrar");
     const mensajeError = document.getElementById("login-error");
     const cargando     = document.getElementById("login-cargando");
 
     function mostrarError(texto) {
-      mensajeError.textContent = texto;
+      mensajeError.textContent  = texto;
       mensajeError.style.display = "block";
-      cargando.style.display = "none";
+      cargando.style.display    = "none";
+      btnEntrar.disabled        = false;
     }
 
-    btnGoogle.addEventListener("click", async () => {
+    formLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
       mensajeError.style.display = "none";
-      cargando.style.display = "block";
-      btnGoogle.disabled = true;
+      cargando.style.display     = "block";
+      btnEntrar.disabled         = true;
+
+      const correo     = document.getElementById("correo").value.trim();
+      const contrasena = document.getElementById("contrasena").value;
 
       try {
-        const proveedor = new GoogleAuthProvider();
-        const resultado = await signInWithPopup(auth, proveedor);
+        const resultado = await signInWithEmailAndPassword(auth, correo, contrasena);
         const uid       = resultado.user.uid;
 
-        // Verificar si el usuario tiene rol asignado
-        const refUsuario = doc(db, "usuarios", uid);
-        const snapUsuario = await getDoc(refUsuario);
+        // Verificar rol en Firestore
+        const snap = await getDoc(doc(db, "usuarios", uid));
 
-        if (!snapUsuario.exists()) {
+        if (!snap.exists()) {
           await auth.signOut();
           mostrarError("Tu cuenta no tiene acceso al portal. Contacta al administrador.");
-          btnGoogle.disabled = false;
           return;
         }
 
-        const rolUsuario = snapUsuario.data().rol;
+        const rolUsuario = snap.data().rol;
 
         if (rolUsuario === "escritor") {
           window.location.href = "escritor.html";
@@ -139,12 +169,18 @@
         } else {
           await auth.signOut();
           mostrarError("Rol no reconocido. Contacta al administrador.");
-          btnGoogle.disabled = false;
         }
 
       } catch (error) {
-        mostrarError("Error al iniciar sesión. Intenta de nuevo.");
-        btnGoogle.disabled = false;
+        // Mensajes de error legibles en español
+        const codigos = {
+          "auth/invalid-credential":   "Correo o contraseña incorrectos.",
+          "auth/user-not-found":        "No existe una cuenta con ese correo.",
+          "auth/wrong-password":        "Contraseña incorrecta.",
+          "auth/too-many-requests":     "Demasiados intentos. Espera unos minutos.",
+          "auth/user-disabled":         "Esta cuenta ha sido deshabilitada.",
+        };
+        mostrarError(codigos[error.code] ?? "Error al iniciar sesión. Intenta de nuevo.");
         console.error(error);
       }
     });
