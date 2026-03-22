@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin — Vigía Científico</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="../css/panel.css">
+  <style>
+    .tabla-usuarios {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .tabla-usuarios th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--gris-borde);
+      color: #555;
+    }
+    .tabla-usuarios td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gris-borde);
+      vertical-align: middle;
+    }
+    .tabla-usuarios tr:last-child td { border-bottom: none; }
+    .badge-rol {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 2px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .badge-escritor { background: #e3f2fd; color: #1565c0; }
+    .badge-editor   { background: #e8f5e9; color: #2e7d32; }
+    .badge-admin    { background: #fce4ec; color: #b71c1c; }
+    .btn-eliminar {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 2px;
+      color: #c62828;
+      transition: background 0.15s;
+    }
+    .btn-eliminar:hover { background: #fce4ec; }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <div class="panel-usuario">
+        <span id="nombre-usuario"></span>
+        <button id="btn-salir" class="btn-salir">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <!-- Registrar nuevo usuario -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">REGISTRAR USUARIO</h2>
+
+      <form id="form-registro" class="formulario">
+        <div class="campo">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" required maxlength="80" placeholder="Nombre completo">
+        </div>
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" required placeholder="correo@ejemplo.com">
+        </div>
+        <div class="campo">
+          <label for="contrasena">Contraseña</label>
+          <input type="password" id="contrasena" required minlength="6" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="campo">
+          <label for="rol">Rol</label>
+          <select id="rol" required>
+            <option value="">Selecciona un rol</option>
+            <option value="escritor">Escritor</option>
+            <option value="editor">Editor</option>
+          </select>
+        </div>
+
+        <div class="form-acciones">
+          <p class="form-estado" id="form-estado"></p>
+          <button type="submit" class="btn-primario" id="btn-registrar">Registrar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Lista de usuarios -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">USUARIOS REGISTRADOS</h2>
+      <div style="background:#fff; border-radius:4px; overflow:auto;">
+        <table class="tabla-usuarios">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body">
+            <tr><td colspan="4" style="color:#888; padding:16px;">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../js/admin.js"></script>
+</body>
+</html>
