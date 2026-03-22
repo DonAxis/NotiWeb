@@ -6,7 +6,7 @@ import { getFirestore }      from "https://www.gstatic.com/firebasejs/11.6.0/fir
 import { getAuth }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { getStorage }        from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey:            "AIzaSyCYSLTVLIKBC9T8UxIzoisDtYv02V6VD9w",
   authDomain:        "vigia-cientifico.firebaseapp.com",
   projectId:         "vigia-cientifico",

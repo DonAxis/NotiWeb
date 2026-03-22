@@ -166,6 +166,8 @@
           window.location.href = "escritor.html";
         } else if (rolUsuario === "editor") {
           window.location.href = "editor.html";
+        } else if (rolUsuario === "admin") {
+          window.location.href = "admin.html";
         } else {
           await auth.signOut();
           mostrarError("Rol no reconocido. Contacta al administrador.");
