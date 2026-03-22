@@ -302,3 +302,92 @@ a {
   border-top: 1px solid var(--gris-borde);
   margin-top: 40px;
 }
+
+/* =====================
+   RESPONSIVE — LANDSCAPE (601–900px)
+   Celular horizontal: 2 columnas, carrusel 2 tarjetas
+   ===================== */
+@media (max-width: 900px) and (orientation: landscape) {
+  .grid-principal {
+    grid-template-columns: 1fr 1fr;
+    height: 280px;
+  }
+
+  .grid-dos {
+    height: 200px;
+  }
+
+  .tarjeta {
+    flex: 0 0 calc(50% - 6px);
+  }
+
+  .tarjeta-imagen {
+    height: 120px;
+  }
+}
+
+/* =====================
+   RESPONSIVE — PORTRAIT (≤ 600px)
+   Celular vertical: 1 columna, carrusel 1 tarjeta
+   ===================== */
+@media (max-width: 600px) {
+
+  /* Encabezado: logo arriba, nav abajo */
+  .encabezado-contenido {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .nav-principal {
+    gap: 12px;
+    font-size: 0.78rem;
+  }
+
+  /* Grid principal: artículo grande arriba, 2 pequeños abajo */
+  .grid-principal {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .articulo-grande {
+    height: 220px;
+  }
+
+  .grid-secundario {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    height: 200px;
+  }
+
+  /* Grid dos columnas: apila verticalmente */
+  .grid-dos {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .grid-dos .articulo {
+    height: 180px;
+  }
+
+  /* Carrusel: 1 tarjeta a la vez */
+  .tarjeta {
+    flex: 0 0 100%;
+  }
+
+  .tarjeta-imagen {
+    height: 140px;
+  }
+
+  /* Tabs: scroll horizontal si no caben */
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .tab {
+    white-space: nowrap;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+  }
+}
