@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nueva contraseña — Vigía Científico</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+  <style>
+    .login-contenedor {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-caja {
+      background: #fff;
+      border-radius: 4px;
+      padding: 40px 48px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-titulo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--rojo);
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+    .login-subtitulo {
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .campo label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #444;
+    }
+    .campo input {
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      border-radius: 2px;
+      transition: border-color 0.2s;
+    }
+    .campo input:focus { outline: none; border-color: var(--rojo); }
+    .btn-guardar {
+      width: 100%;
+      background: var(--rojo);
+      color: #fff;
+      border: none;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 2px;
+      margin-top: 4px;
+      transition: opacity 0.2s;
+    }
+    .btn-guardar:hover    { opacity: 0.85; }
+    .btn-guardar:disabled { opacity: 0.5; cursor: not-allowed; }
+    .mensaje {
+      font-size: 0.82rem;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .mensaje-error { color: var(--rojo); }
+    .mensaje-ok    { color: green; }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+    </div>
+  </header>
+
+  <main class="contenedor login-contenedor">
+    <div class="login-caja">
+      <p class="login-titulo">NUEVA CONTRASEÑA</p>
+      <p class="login-subtitulo">Elige una contraseña segura para tu cuenta</p>
+
+      <div id="zona-form">
+        <div class="campo">
+          <label for="nueva">Nueva contraseña</label>
+          <input type="password" id="nueva" minlength="6" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="campo">
+          <label for="confirmar">Confirmar contraseña</label>
+          <input type="password" id="confirmar" placeholder="Repite la contraseña">
+        </div>
+        <button class="btn-guardar" id="btn-guardar">Guardar contraseña</button>
+        <p class="mensaje mensaje-error" id="msg-error" style="display:none;"></p>
+      </div>
+
+      <!-- Mensaje final -->
+      <div id="zona-ok" style="display:none;">
+        <p class="mensaje mensaje-ok">Contraseña actualizada correctamente.</p>
+        <p class="mensaje" style="margin-top:8px;">
+          <a href="login.html" style="color:var(--rojo);">Ir al inicio de sesión →</a>
+        </p>
+      </div>
+
+      <div id="zona-invalido" style="display:none;">
+        <p class="mensaje mensaje-error">El enlace no es válido o ya expiró.</p>
+        <p class="mensaje" style="margin-top:8px;">
+          <a href="login.html" style="color:var(--rojo);">Solicitar un nuevo enlace →</a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth }                      from "../js/firebase.js";
+    import { confirmPasswordReset,
+             verifyPasswordResetCode }   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+    // Firebase envía el link con ?mode=resetPassword&oobCode=XXX en la URL
+    const params  = new URLSearchParams(window.location.search);
+    const modo    = params.get("mode");
+    const codigo  = params.get("oobCode");
+
+    // Verificar que el link sea válido antes de mostrar el formulario
+    if (modo !== "resetPassword" || !codigo) {
+      document.getElementById("zona-form").style.display    = "none";
+      document.getElementById("zona-invalido").style.display = "block";
+    } else {
+      // Verificar que el código no haya expirado (6 horas por defecto en Firebase)
+      verifyPasswordResetCode(auth, codigo).catch(() => {
+        document.getElementById("zona-form").style.display    = "none";
+        document.getElementById("zona-invalido").style.display = "block";
+      });
+    }
+
+    document.getElementById("btn-guardar").addEventListener("click", async () => {
+      const nueva     = document.getElementById("nueva").value;
+      const confirmar = document.getElementById("confirmar").value;
+      const msgError  = document.getElementById("msg-error");
+      const btnGuardar = document.getElementById("btn-guardar");
+
+      msgError.style.display = "none";
+
+      if (nueva.length < 6) {
+        msgError.textContent  = "La contraseña debe tener al menos 6 caracteres.";
+        msgError.style.display = "block";
+        return;
+      }
+      if (nueva !== confirmar) {
+        msgError.textContent  = "Las contraseñas no coinciden.";
+        msgError.style.display = "block";
+        return;
+      }
+
+      btnGuardar.disabled = true;
+
+      try {
+        await confirmPasswordReset(auth, codigo, nueva);
+        document.getElementById("zona-form").style.display = "none";
+        document.getElementById("zona-ok").style.display   = "block";
+      } catch (error) {
+        const codigos = {
+          "auth/expired-action-code":  "El enlace expiró. Solicita uno nuevo.",
+          "auth/invalid-action-code":  "El enlace no es válido.",
+          "auth/weak-password":        "La contraseña debe tener al menos 6 caracteres.",
+        };
+        msgError.textContent  = codigos[error.code] ?? "Error al guardar. Intenta de nuevo.";
+        msgError.style.display = "block";
+        btnGuardar.disabled   = false;
+        console.error(error);
+      }
+    });
+  </script>
+
+</body>
+</html>

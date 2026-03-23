@@ -89,6 +89,29 @@
       text-align: center;
       display: none;
     }
+    .link-olvide {
+      display: block;
+      text-align: right;
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 10px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .link-olvide:hover { color: var(--rojo); }
+    .reset-zona {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #eee;
+      display: none;
+    }
+    .reset-ok {
+      font-size: 0.82rem;
+      color: green;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -116,14 +139,28 @@
         <button type="submit" class="btn-entrar" id="btn-entrar">Entrar</button>
       </form>
 
+      <span class="link-olvide" id="link-olvide">¿Olvidaste tu contraseña?</span>
+
+      <!-- Zona de recuperación de contraseña -->
+      <div class="reset-zona" id="reset-zona">
+        <div class="campo">
+          <label for="correo-reset">Correo de tu cuenta</label>
+          <input type="email" id="correo-reset" placeholder="correo@ejemplo.com">
+        </div>
+        <button class="btn-entrar" id="btn-reset">Enviar enlace</button>
+        <p class="reset-ok" id="reset-ok">Correo enviado. Revisa tu bandeja de entrada.</p>
+        <p class="login-error" id="reset-error"></p>
+      </div>
+
       <p class="login-error"   id="login-error"></p>
       <p class="login-cargando" id="login-cargando">Verificando acceso...</p>
     </div>
   </main>
 
   <script type="module">
-    import { auth, db }                              from "../js/firebase.js";
-    import { signInWithEmailAndPassword }            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+    import { auth, db }                                        from "../js/firebase.js";
+    import { signInWithEmailAndPassword,
+             sendPasswordResetEmail }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
     import { doc, getDoc }                           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
     const formLogin    = document.getElementById("form-login");
@@ -183,6 +220,41 @@
           "auth/user-disabled":         "Esta cuenta ha sido deshabilitada.",
         };
         mostrarError(codigos[error.code] ?? "Error al iniciar sesión. Intenta de nuevo.");
+        console.error(error);
+      }
+    });
+
+    // --- OLVIDÉ MI CONTRASEÑA ---
+    document.getElementById("link-olvide").addEventListener("click", () => {
+      const zona = document.getElementById("reset-zona");
+      zona.style.display = zona.style.display === "block" ? "none" : "block";
+    });
+
+    document.getElementById("btn-reset").addEventListener("click", async () => {
+      const correoReset = document.getElementById("correo-reset").value.trim();
+      const okMsg       = document.getElementById("reset-ok");
+      const errMsg      = document.getElementById("reset-error");
+      okMsg.style.display  = "none";
+      errMsg.style.display = "none";
+
+      if (!correoReset) {
+        errMsg.textContent  = "Escribe tu correo.";
+        errMsg.style.display = "block";
+        return;
+      }
+
+      try {
+        await sendPasswordResetEmail(auth, correoReset, {
+          url: window.location.origin + "/NotiWeb/paginas/login.html"
+        });
+        okMsg.style.display = "block";
+      } catch (error) {
+        const codigos = {
+          "auth/user-not-found":  "No existe una cuenta con ese correo.",
+          "auth/invalid-email":   "El correo no es válido.",
+        };
+        errMsg.textContent  = codigos[error.code] ?? "Error al enviar. Intenta de nuevo.";
+        errMsg.style.display = "block";
         console.error(error);
       }
     });
