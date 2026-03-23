@@ -8,14 +8,13 @@ const CLOUDINARY_URL    = "https://api.cloudinary.com/v1_1/diaki2vi2/image/uploa
 const CLOUDINARY_PRESET = "VIGÍA CIENTÍFICO";
 
 // --- PROTECCIÓN DE RUTA ---
-// Si el usuario no está autenticado o no es escritor, redirige al login
 onAuthStateChanged(auth, async (usuario) => {
   if (!usuario) {
     window.location.href = "login.html";
     return;
   }
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
-  cargarBorradores(usuario.uid);
+  cargarBorradores();
 });
 
 // --- CERRAR SESIÓN ---
@@ -24,15 +23,29 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
   window.location.href = "login.html";
 });
 
-// --- VISTA PREVIA DE IMAGEN ---
-document.getElementById("imagen").addEventListener("change", (e) => {
-  const archivo = e.target.files[0];
-  if (!archivo) return;
-  const contenedor = document.getElementById("vista-previa-contenedor");
-  const img        = document.getElementById("vista-previa");
-  img.src          = URL.createObjectURL(archivo);
-  contenedor.style.display = "block";
-});
+// --- VISTA PREVIA DE IMÁGENES ---
+function agregarVistaPrevia(inputId, imgId, contenedorId) {
+  document.getElementById(inputId).addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    document.getElementById(imgId).src = URL.createObjectURL(archivo);
+    document.getElementById(contenedorId).style.display = "block";
+  });
+}
+agregarVistaPrevia("imagen",  "vista-previa",  "vista-previa-contenedor");
+agregarVistaPrevia("imagen2", "vista-previa2", "vista-previa2-contenedor");
+agregarVistaPrevia("imagen3", "vista-previa3", "vista-previa3-contenedor");
+
+// --- HELPER: subir imagen a Cloudinary ---
+async function subirImagen(archivo) {
+  const formData = new FormData();
+  formData.append("file",          archivo);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
+  const respuesta = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
+  if (!respuesta.ok) throw new Error("Error al subir imagen");
+  const datos = await respuesta.json();
+  return datos.secure_url;
+}
 
 // --- ENVIAR BORRADOR ---
 document.getElementById("form-articulo").addEventListener("submit", async (e) => {
@@ -45,47 +58,58 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
   const categoria = document.getElementById("categoria").value;
   const fuente    = document.getElementById("fuente").value.trim();
   const contenido = document.getElementById("contenido").value.trim();
-  const archivoImagen = document.getElementById("imagen").files[0];
+  const archivo1  = document.getElementById("imagen").files[0];
+  const archivo2  = document.getElementById("imagen2").files[0];
+  const archivo3  = document.getElementById("imagen3").files[0];
 
-  if (!archivoImagen) {
-    estadoTexto.textContent = "Selecciona una imagen.";
+  if (!archivo1) {
+    estadoTexto.textContent = "La imagen principal es obligatoria.";
     estadoTexto.style.color = "var(--rojo)";
     return;
   }
 
   btnEnviar.disabled      = true;
   estadoTexto.style.color = "#555";
-  estadoTexto.textContent = "Subiendo imagen...";
+  estadoTexto.textContent = "Subiendo imagen principal...";
 
   try {
-    // 1. Subir imagen a Cloudinary
-    const formData = new FormData();
-    formData.append("file",           archivoImagen);
-    formData.append("upload_preset",  CLOUDINARY_PRESET);
+    const imagenURL = await subirImagen(archivo1);
 
-    const respuesta = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-    if (!respuesta.ok) throw new Error("Error al subir imagen a Cloudinary");
-    const datosImagen = await respuesta.json();
-    const imagenURL   = datosImagen.secure_url;
+    let imagen2URL = null;
+    if (archivo2) {
+      estadoTexto.textContent = "Subiendo imagen 2...";
+      imagen2URL = await subirImagen(archivo2);
+    }
+
+    let imagen3URL = null;
+    if (archivo3) {
+      estadoTexto.textContent = "Subiendo imagen 3...";
+      imagen3URL = await subirImagen(archivo3);
+    }
 
     estadoTexto.textContent = "Guardando artículo...";
 
-    // 2. Guardar artículo en Firestore
-    await addDoc(collection(db, "articulos"), {
+    // Construir documento — solo incluir campos opcionales si tienen valor
+    const articulo = {
       titulo,
       contenido,
       estado:    "borrador",
       fecha:     Timestamp.now(),
-      fuente,
       imagenURL,
       categoria
-    });
+    };
+    if (fuente)     articulo.fuente     = fuente;
+    if (imagen2URL) articulo.imagen2URL = imagen2URL;
+    if (imagen3URL) articulo.imagen3URL = imagen3URL;
+
+    await addDoc(collection(db, "articulos"), articulo);
 
     estadoTexto.style.color = "green";
     estadoTexto.textContent = "Borrador enviado. El editor lo revisará pronto.";
     e.target.reset();
-    document.getElementById("vista-previa-contenedor").style.display = "none";
-    cargarBorradores(auth.currentUser.uid);
+    ["vista-previa-contenedor","vista-previa2-contenedor","vista-previa3-contenedor"]
+      .forEach(id => document.getElementById(id).style.display = "none");
+    cargarBorradores();
 
   } catch (error) {
     estadoTexto.style.color = "var(--rojo)";
@@ -97,7 +121,7 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
 });
 
 // --- CARGAR BORRADORES PROPIOS ---
-async function cargarBorradores(uid) {
+async function cargarBorradores() {
   const lista = document.getElementById("lista-borradores");
   lista.innerHTML = "<p class='lista-vacia'>Cargando...</p>";
 
@@ -118,12 +142,13 @@ async function cargarBorradores(uid) {
     snap.forEach((doc) => {
       const datos = doc.data();
       const fecha = datos.fecha?.toDate().toLocaleDateString("es-MX") ?? "—";
+      const extras = [datos.imagen2URL, datos.imagen3URL].filter(Boolean).length;
       lista.innerHTML += `
         <div class="articulo-fila">
           <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
           <div class="articulo-fila-info">
             <p class="articulo-fila-titulo">${datos.titulo}</p>
-            <p class="articulo-fila-meta">${datos.categoria} · ${fecha} · <span class="estado-borrador">Borrador</span></p>
+            <p class="articulo-fila-meta">${datos.categoria} · ${fecha} · ${1 + extras} imagen(es) · <span class="estado-borrador">Borrador</span></p>
           </div>
         </div>`;
     });

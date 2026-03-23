@@ -44,16 +44,35 @@
         </div>
 
         <div class="campo">
-          <label for="fuente">URL del artículo científico original</label>
-          <input type="url" id="fuente" required placeholder="https://doi.org/...">
+          <label for="fuente">Fuentes científicas <span style="font-weight:400; text-transform:none;">(opcional — una URL por línea)</span></label>
+          <textarea id="fuente" rows="3" maxlength="500"
+            placeholder="https://doi.org/...&#10;https://pubmed.ncbi.nlm.nih.gov/..."></textarea>
         </div>
 
         <div class="campo">
-          <label for="imagen">Imagen del artículo</label>
+          <label for="imagen">Imagen principal <span style="color:var(--rojo);">*</span></label>
           <input type="file" id="imagen" accept="image/*" required>
-          <p class="campo-ayuda">Máximo 5 MB. JPG, PNG o WebP.</p>
+          <p class="campo-ayuda">Requerida. Máx 5 MB. JPG, PNG o WebP.</p>
           <div id="vista-previa-contenedor" style="display:none;">
-            <img id="vista-previa" src="" alt="Vista previa" style="max-height:180px; margin-top:8px;">
+            <img id="vista-previa" src="" alt="Vista previa" style="max-height:160px; margin-top:8px;">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="imagen2">Imagen 2 <span style="font-weight:400; text-transform:none;">(opcional — se mostrará a la mitad del artículo)</span></label>
+          <input type="file" id="imagen2" accept="image/*">
+          <p class="campo-ayuda">Máx 5 MB.</p>
+          <div id="vista-previa2-contenedor" style="display:none;">
+            <img id="vista-previa2" src="" alt="Vista previa 2" style="max-height:160px; margin-top:8px;">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="imagen3">Imagen 3 <span style="font-weight:400; text-transform:none;">(opcional — se mostrará al final del artículo)</span></label>
+          <input type="file" id="imagen3" accept="image/*">
+          <p class="campo-ayuda">Máx 5 MB.</p>
+          <div id="vista-previa3-contenedor" style="display:none;">
+            <img id="vista-previa3" src="" alt="Vista previa 3" style="max-height:160px; margin-top:8px;">
           </div>
         </div>
 

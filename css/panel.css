@@ -238,6 +238,29 @@
   padding-top: 16px;
 }
 
+/* Bloques de imagen en el editor */
+.editor-bloque {
+  border: 1px solid var(--gris-borde);
+  border-radius: 2px;
+  padding: 10px 12px;
+  background: #fafafa;
+}
+.editor-bloque-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.editor-meta-fila {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #555;
+}
+.editor-meta-fila a { color: var(--rojo); text-decoration: underline; }
+
 /* Responsive */
 @media (max-width: 600px) {
   .formulario { padding: 16px; }

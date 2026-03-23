@@ -4,8 +4,8 @@ import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/f
 import { collection, query, where, orderBy,
          getDocs, doc, updateDoc, Timestamp }    from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-let articuloSeleccionadoId = null;
-let articuloSeleccionadoDatos = null;
+let articuloId    = null;
+let articuloDatos = null;
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -68,50 +68,96 @@ async function cargarBorradores() {
 
 // --- ABRIR DETALLE ---
 function abrirDetalle(id, datos) {
-  articuloSeleccionadoId    = id;
-  articuloSeleccionadoDatos = datos;
+  articuloId    = id;
+  articuloDatos = datos;
 
-  document.getElementById("detalle-imagen").src         = datos.imagenURL;
+  // Imagen principal
+  document.getElementById("detalle-imagen").src = datos.imagenURL;
+
+  // Campos editables
+  document.getElementById("editor-titulo").value    = datos.titulo;
+  document.getElementById("editor-contenido").value = datos.contenido;
+
+  // Meta (solo lectura)
   document.getElementById("detalle-categoria").textContent = datos.categoria;
-  document.getElementById("detalle-titulo").textContent  = datos.titulo;
-  document.getElementById("detalle-fuente").href         = datos.fuente;
-  document.getElementById("detalle-contenido").textContent = datos.contenido;
-  document.getElementById("detalle-estado").textContent  = "";
+  if (datos.fuente) {
+    document.getElementById("detalle-fuente").href          = datos.fuente;
+    document.getElementById("detalle-fuente-row").style.display = "block";
+  } else {
+    document.getElementById("detalle-fuente-row").style.display = "none";
+  }
 
+  // Imagen 2 (opcional)
+  if (datos.imagen2URL) {
+    document.getElementById("detalle-imagen2").src      = datos.imagen2URL;
+    document.getElementById("bloque-imagen2").style.display = "block";
+  } else {
+    document.getElementById("bloque-imagen2").style.display = "none";
+  }
+
+  // Imagen 3 (opcional)
+  if (datos.imagen3URL) {
+    document.getElementById("detalle-imagen3").src      = datos.imagen3URL;
+    document.getElementById("bloque-imagen3").style.display = "block";
+  } else {
+    document.getElementById("bloque-imagen3").style.display = "none";
+  }
+
+  document.getElementById("detalle-estado").textContent  = "";
+  document.getElementById("btn-publicar").disabled       = false;
   document.getElementById("detalle-seccion").style.display = "block";
   document.getElementById("detalle-seccion").scrollIntoView({ behavior: "smooth" });
-  document.getElementById("btn-publicar").disabled = false;
 }
 
 // --- VOLVER ---
 document.getElementById("btn-cerrar-detalle").addEventListener("click", () => {
   document.getElementById("detalle-seccion").style.display = "none";
-  articuloSeleccionadoId    = null;
-  articuloSeleccionadoDatos = null;
+  articuloId    = null;
+  articuloDatos = null;
 });
 
 // --- PUBLICAR ---
 document.getElementById("btn-publicar").addEventListener("click", async () => {
-  if (!articuloSeleccionadoId || !articuloSeleccionadoDatos) return;
+  if (!articuloId || !articuloDatos) return;
 
-  const btnPublicar  = document.getElementById("btn-publicar");
-  const estadoTexto  = document.getElementById("detalle-estado");
+  const btnPublicar = document.getElementById("btn-publicar");
+  const estadoTexto = document.getElementById("detalle-estado");
 
-  btnPublicar.disabled     = true;
-  estadoTexto.style.color  = "#555";
-  estadoTexto.textContent  = "Publicando...";
+  const tituloEditado    = document.getElementById("editor-titulo").value.trim();
+  const contenidoEditado = document.getElementById("editor-contenido").value.trim();
+
+  if (!tituloEditado || !contenidoEditado) {
+    estadoTexto.style.color = "var(--rojo)";
+    estadoTexto.textContent = "El título y el contenido no pueden estar vacíos.";
+    return;
+  }
+
+  btnPublicar.disabled    = true;
+  estadoTexto.style.color = "#555";
+  estadoTexto.textContent = "Publicando...";
 
   try {
-    await updateDoc(doc(db, "articulos", articuloSeleccionadoId), {
-      ...articuloSeleccionadoDatos,
+    // Construir el documento final con campos obligatorios
+    const actualizacion = {
+      titulo:           tituloEditado,
+      contenido:        contenidoEditado,
       estado:           "publicado",
+      fecha:            articuloDatos.fecha,
+      imagenURL:        articuloDatos.imagenURL,
+      categoria:        articuloDatos.categoria,
       fechaPublicacion: Timestamp.now()
-    });
+    };
+
+    // Incluir campos opcionales si existían en el borrador original
+    if (articuloDatos.fuente)     actualizacion.fuente     = articuloDatos.fuente;
+    if (articuloDatos.imagen2URL) actualizacion.imagen2URL = articuloDatos.imagen2URL;
+    if (articuloDatos.imagen3URL) actualizacion.imagen3URL = articuloDatos.imagen3URL;
+
+    await updateDoc(doc(db, "articulos", articuloId), actualizacion);
 
     estadoTexto.style.color = "green";
     estadoTexto.textContent = "Artículo publicado correctamente.";
 
-    // Actualizar lista sin recargar página
     setTimeout(() => {
       document.getElementById("detalle-seccion").style.display = "none";
       cargarBorradores();
