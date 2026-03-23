@@ -1,9 +1,11 @@
 // escritor.js — panel del escritor
-import { auth, db, storage }                    from "./firebase.js";
+import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, addDoc, query, where,
          orderBy, getDocs, Timestamp }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
+
+const CLOUDINARY_URL    = "https://api.cloudinary.com/v1_1/diaki2vi2/image/upload";
+const CLOUDINARY_PRESET = "VIGÍA CIENTÍFICO";
 
 // --- PROTECCIÓN DE RUTA ---
 // Si el usuario no está autenticado o no es escritor, redirige al login
@@ -56,12 +58,15 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
   estadoTexto.textContent = "Subiendo imagen...";
 
   try {
-    // 1. Subir imagen a Firebase Storage
-    const extension  = archivoImagen.name.split(".").pop();
-    const nombreArchivo = `articulos/${Date.now()}.${extension}`;
-    const refImagen  = ref(storage, nombreArchivo);
-    await uploadBytes(refImagen, archivoImagen);
-    const imagenURL  = await getDownloadURL(refImagen);
+    // 1. Subir imagen a Cloudinary
+    const formData = new FormData();
+    formData.append("file",           archivoImagen);
+    formData.append("upload_preset",  CLOUDINARY_PRESET);
+
+    const respuesta = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
+    if (!respuesta.ok) throw new Error("Error al subir imagen a Cloudinary");
+    const datosImagen = await respuesta.json();
+    const imagenURL   = datosImagen.secure_url;
 
     estadoTexto.textContent = "Guardando artículo...";
 
