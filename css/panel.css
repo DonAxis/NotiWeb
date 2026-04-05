@@ -180,6 +180,34 @@
   flex-shrink: 0;
 }
 
+.estado-publicado {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 2px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-destacado {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  color: #888;
+}
+.btn-destacado:hover       { background: #fff3e0; color: #e65100; border-color: #e65100; }
+.btn-destacado-activo      { background: #fff8e1; color: #f57f17; border-color: #f57f17; }
+.btn-destacado:disabled    { opacity: 0.5; cursor: not-allowed; }
+
 /* Detalle del artículo (editor) */
 .detalle-contenedor {
   background: var(--blanco);

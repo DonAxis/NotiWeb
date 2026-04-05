@@ -21,62 +21,86 @@
 
   <main class="contenedor">
 
-    <!-- Lista de borradores pendientes -->
+    <!-- SECCIÓN 1: Borradores pendientes de aprobar -->
     <section class="seccion">
-      <h2 class="seccion-titulo">BORRADORES PENDIENTES</h2>
-      <div id="lista-borradores" class="lista-articulos">
+      <h2 class="seccion-titulo">1 — PENDIENTES DE APROBACIÓN</h2>
+      <div id="lista-pendientes" class="lista-articulos">
         <p class="lista-vacia">Cargando...</p>
       </div>
     </section>
 
-    <!-- Edición y publicación del artículo seleccionado -->
+    <!-- SECCIÓN 2: Artículos publicados para editar -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">2 — ARTÍCULOS PUBLICADOS</h2>
+      <div id="lista-publicados" class="lista-articulos">
+        <p class="lista-vacia">Cargando...</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: Gestión de destacados por categoría -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">3 — TE PUEDE INTERESAR — GESTIONAR DESTACADOS</h2>
+      <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">
+        Los artículos marcados como <strong>Destacado</strong> aparecen en el carrusel de la página principal.
+      </p>
+      <div class="tabs" id="tabs-destacados">
+        <button class="tab activo" data-cat="investigacion">INVESTIGACIÓN</button>
+        <button class="tab" data-cat="salud">SALUD</button>
+        <button class="tab" data-cat="tecnologia">TECNOLOGÍA</button>
+        <button class="tab" data-cat="academia">ACADEMIA</button>
+        <button class="tab" data-cat="medio-ambiente">MEDIO AMBIENTE</button>
+      </div>
+      <div id="lista-destacados" class="lista-articulos" style="margin-top:12px;">
+        <p class="lista-vacia">Cargando...</p>
+      </div>
+    </section>
+
+    <!-- PANEL COMPARTIDO DE EDICIÓN (oculto hasta seleccionar artículo) -->
     <section id="detalle-seccion" class="seccion" style="display:none;">
-      <h2 class="seccion-titulo">EDITAR Y PUBLICAR</h2>
+      <h2 class="seccion-titulo" id="detalle-seccion-titulo">EDITAR ARTÍCULO</h2>
 
       <div class="detalle-contenedor">
 
-        <!-- Imagen principal -->
         <div class="editor-bloque">
           <p class="editor-bloque-label">IMAGEN PRINCIPAL (PORTADA)</p>
           <img id="detalle-imagen" src="" alt="Portada" class="detalle-imagen">
         </div>
 
-        <!-- Título editable -->
         <div class="campo">
           <label for="editor-titulo">Título</label>
           <input type="text" id="editor-titulo" maxlength="200">
         </div>
 
-        <!-- Categoría y fuente (solo lectura informativa) -->
         <div class="editor-meta-fila">
           <p><strong>Categoría:</strong> <span id="detalle-categoria"></span></p>
           <p id="detalle-fuente-row" style="display:none;">
-            <strong>Fuente:</strong> <a id="detalle-fuente" href="#" target="_blank" rel="noopener">ver artículo original</a>
+            <strong>Fuente:</strong>
+            <a id="detalle-fuente" href="#" target="_blank" rel="noopener">ver artículo original</a>
           </p>
         </div>
 
-        <!-- Contenido editable -->
         <div class="campo">
           <label for="editor-contenido">Texto del artículo</label>
           <textarea id="editor-contenido" rows="14" maxlength="50000"></textarea>
         </div>
 
-        <!-- Imagen 2 (opcional) -->
         <div id="bloque-imagen2" class="editor-bloque" style="display:none;">
-          <p class="editor-bloque-label">IMAGEN 2 — se mostrará a la mitad del artículo</p>
+          <p class="editor-bloque-label">IMAGEN 2 — mitad del artículo</p>
           <img id="detalle-imagen2" src="" alt="Imagen 2" class="detalle-imagen">
         </div>
 
-        <!-- Imagen 3 (opcional) -->
         <div id="bloque-imagen3" class="editor-bloque" style="display:none;">
-          <p class="editor-bloque-label">IMAGEN 3 — se mostrará al final del artículo</p>
+          <p class="editor-bloque-label">IMAGEN 3 — final del artículo</p>
           <img id="detalle-imagen3" src="" alt="Imagen 3" class="detalle-imagen">
         </div>
 
         <div class="detalle-acciones">
           <p class="form-estado" id="detalle-estado"></p>
           <button class="btn-secundario" id="btn-cerrar-detalle">Volver</button>
-          <button class="btn-primario"   id="btn-publicar">Publicar artículo</button>
+          <!-- Solo aparece cuando el modo es "publicar" (borrador) -->
+          <button class="btn-primario" id="btn-publicar" style="display:none;">Publicar artículo</button>
+          <!-- Solo aparece cuando el modo es "editar" (publicado) -->
+          <button class="btn-primario" id="btn-guardar" style="display:none;">Guardar cambios</button>
         </div>
 
       </div>

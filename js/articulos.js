@@ -85,6 +85,7 @@ async function cargarCarrusel(categoria) {
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
       where("categoria", "==", categoriaFirestore),
+      where("destacado", "==", true),
       orderBy("fechaPublicacion", "desc"),
       limit(10)
     );

@@ -8,11 +8,14 @@ const CLOUDINARY_URL    = "https://api.cloudinary.com/v1_1/diaki2vi2/image/uploa
 const CLOUDINARY_PRESET = "VIGÍA CIENTÍFICO";
 
 // --- PROTECCIÓN DE RUTA ---
+let uidActual = null;
+
 onAuthStateChanged(auth, async (usuario) => {
   if (!usuario) {
     window.location.href = "../paginas/login.html";
     return;
   }
+  uidActual = usuario.uid;
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
   cargarBorradores();
 });
@@ -96,7 +99,8 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
       estado:    "borrador",
       fecha:     Timestamp.now(),
       imagenURL,
-      categoria
+      categoria,
+      uid:       uidActual
     };
     if (fuente)     articulo.fuente     = fuente;
     if (imagen2URL) articulo.imagen2URL = imagen2URL;
@@ -129,6 +133,7 @@ async function cargarBorradores() {
     const q = query(
       collection(db, "articulos"),
       where("estado", "==", "borrador"),
+      where("uid", "==", uidActual),
       orderBy("fecha", "desc")
     );
     const snap = await getDocs(q);
