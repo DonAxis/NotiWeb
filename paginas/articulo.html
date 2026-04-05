@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artículo — Vigía Científico</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+  <style>
+    .articulo-pagina {
+      max-width: 720px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+    .art-categoria {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--rojo);
+      margin-bottom: 10px;
+    }
+    .art-titulo {
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .art-meta {
+      font-size: 0.78rem;
+      color: #888;
+      margin-bottom: 24px;
+    }
+    .art-imagen-principal {
+      width: 100%;
+      max-height: 420px;
+      object-fit: cover;
+      margin-bottom: 28px;
+    }
+    .art-contenido {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #222;
+      white-space: pre-wrap;
+    }
+    .art-imagen-extra {
+      width: 100%;
+      max-height: 360px;
+      object-fit: cover;
+      margin: 28px 0;
+    }
+    .art-fuentes {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gris-borde);
+      font-size: 0.82rem;
+      color: #777;
+    }
+    .art-fuentes strong {
+      display: block;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+    }
+    .art-fuentes a {
+      color: var(--rojo);
+      display: block;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+    .art-error {
+      text-align: center;
+      padding: 60px 16px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <nav class="nav-principal">
+        <a href="../index.html">← Volver</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido-articulo" class="articulo-pagina">
+    <p style="color:#888; text-align:center; padding:60px 0;">Cargando...</p>
+  </main>
+
+  <footer class="pie">
+    <p>© 2026 Vigía Científico — Ciencia al alcance de todos</p>
+  </footer>
+
+  <script type="module">
+    import { db }           from "../js/firebase.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    const params     = new URLSearchParams(window.location.search);
+    const id         = params.get("id");
+    const contenedor = document.getElementById("contenido-articulo");
+
+    if (!id) {
+      contenedor.innerHTML = `<p class="art-error">Artículo no encontrado.</p>`;
+    } else {
+      const snap = await getDoc(doc(db, "articulos", id));
+
+      if (!snap.exists() || snap.data().estado !== "publicado") {
+        contenedor.innerHTML = `<p class="art-error">Este artículo no está disponible.</p>`;
+      } else {
+        const a     = snap.data();
+        const fecha = a.fechaPublicacion?.toDate().toLocaleDateString("es-MX", {
+          year: "numeric", month: "long", day: "numeric"
+        }) ?? "";
+
+        document.title = `${a.titulo} — Vigía Científico`;
+
+        // Fuentes: una URL por línea
+        let fuentesHTML = "";
+        if (a.fuente) {
+          const links = a.fuente.split("\n")
+            .map(l => l.trim()).filter(Boolean)
+            .map(url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`)
+            .join("");
+          fuentesHTML = `<div class="art-fuentes"><strong>Fuentes científicas</strong>${links}</div>`;
+        }
+
+        // Imagen 2 a la mitad, imagen 3 al final
+        const img2 = a.imagen2URL
+          ? `<img src="${a.imagen2URL}" alt="" class="art-imagen-extra">`
+          : "";
+        const img3 = a.imagen3URL
+          ? `<img src="${a.imagen3URL}" alt="" class="art-imagen-extra">`
+          : "";
+
+        // Partir el contenido en dos mitades para intercalar imagen 2
+        const parrafos = a.contenido.split("\n\n");
+        const mitad    = Math.ceil(parrafos.length / 2);
+        const parte1   = parrafos.slice(0, mitad).join("\n\n");
+        const parte2   = parrafos.slice(mitad).join("\n\n");
+
+        contenedor.innerHTML = `
+          <p class="art-categoria">${a.categoria}</p>
+          <h1 class="art-titulo">${a.titulo}</h1>
+          <p class="art-meta">${fecha}</p>
+          <img src="${a.imagenURL}" alt="${a.titulo}" class="art-imagen-principal">
+          <div class="art-contenido">${parte1}</div>
+          ${img2}
+          <div class="art-contenido">${parte2}</div>
+          ${img3}
+          ${fuentesHTML}`;
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -14,12 +14,16 @@ async function cargarUltimasNoticias() {
     );
     const snap = await getDocs(q);
     const articulos = [];
-    snap.forEach(doc => articulos.push(doc.data()));
+    snap.forEach(doc => articulos.push({ _id: doc.id, ...doc.data() }));
 
     if (articulos[0]) {
       const el = document.getElementById("articulo-destacado");
       el.style.backgroundImage = `url(${articulos[0].imagenURL})`;
       el.querySelector(".articulo-titulo").textContent = articulos[0].titulo;
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => {
+        window.location.href = `paginas/articulo.html?id=${articulos[0]._id}`;
+      });
     }
 
     const secundarios = document.getElementById("grid-secundario").querySelectorAll(".articulo");
@@ -27,6 +31,10 @@ async function cargarUltimasNoticias() {
       if (!secundarios[i]) return;
       secundarios[i].style.backgroundImage = `url(${a.imagenURL})`;
       secundarios[i].querySelector(".articulo-titulo").textContent = a.titulo;
+      secundarios[i].style.cursor = "pointer";
+      secundarios[i].addEventListener("click", () => {
+        window.location.href = `paginas/articulo.html?id=${a._id}`;
+      });
     });
 
   } catch (error) {
@@ -46,13 +54,17 @@ async function cargarCiencia() {
     );
     const snap = await getDocs(q);
     const articulos = [];
-    snap.forEach(doc => articulos.push(doc.data()));
+    snap.forEach(doc => articulos.push({ _id: doc.id, ...doc.data() }));
 
     const tarjetas = document.getElementById("grid-ciencia").querySelectorAll(".articulo");
     articulos.forEach((a, i) => {
       if (!tarjetas[i]) return;
       tarjetas[i].style.backgroundImage = `url(${a.imagenURL})`;
       tarjetas[i].querySelector(".articulo-titulo").textContent = a.titulo;
+      tarjetas[i].style.cursor = "pointer";
+      tarjetas[i].addEventListener("click", () => {
+        window.location.href = `paginas/articulo.html?id=${a._id}`;
+      });
     });
 
   } catch (error) {
@@ -83,12 +95,16 @@ async function cargarCarrusel(categoria) {
       return;
     }
 
-    snap.forEach(doc => {
-      const a = doc.data();
+    snap.forEach(documento => {
+      const a = { _id: documento.id, ...documento.data() };
       const tarjeta = document.createElement("div");
       tarjeta.className = "tarjeta";
       tarjeta.style.backgroundImage = `url(${a.imagenURL})`;
+      tarjeta.style.cursor = "pointer";
       tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${a.titulo}</p></div>`;
+      tarjeta.addEventListener("click", () => {
+        window.location.href = `paginas/articulo.html?id=${a._id}`;
+      });
       carrusel.appendChild(tarjeta);
     });
 
