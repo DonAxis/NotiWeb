@@ -10,7 +10,7 @@ let articuloDatos = null;
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
   if (!usuario) {
-    window.location.href = "login.html";
+    window.location.href = "../paginas/login.html";
     return;
   }
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
@@ -20,7 +20,7 @@ onAuthStateChanged(auth, async (usuario) => {
 // --- CERRAR SESIÓN ---
 document.getElementById("btn-salir").addEventListener("click", async () => {
   await signOut(auth);
-  window.location.href = "login.html";
+  window.location.href = "../paginas/login.html";
 });
 
 // --- CARGAR BORRADORES ---
