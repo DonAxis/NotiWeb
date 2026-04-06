@@ -2,7 +2,7 @@
 import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, query, where, orderBy,
-         getDocs, doc, updateDoc, Timestamp }    from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         getDocs, getDoc, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // Estado del panel de edición
 let articuloId    = null;
@@ -14,6 +14,19 @@ onAuthStateChanged(auth, async (usuario) => {
     window.location.href = "../paginas/login.html";
     return;
   }
+
+  const snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  const rol  = snap.exists() ? snap.data().rol : null;
+
+  if (rol === "escritor") {
+    window.location.href = "../escritor/index.html";
+    return;
+  }
+  if (rol !== "editor") {
+    window.location.href = "../paginas/login.html";
+    return;
+  }
+
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
   cargarPendientes();
   cargarPublicados();

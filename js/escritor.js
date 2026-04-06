@@ -2,7 +2,7 @@
 import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, addDoc, query, where,
-         orderBy, getDocs, Timestamp }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         orderBy, getDocs, getDoc, doc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const CLOUDINARY_URL    = "https://api.cloudinary.com/v1_1/diaki2vi2/image/upload";
 const CLOUDINARY_PRESET = "VIGÍA CIENTÍFICO";
@@ -15,6 +15,19 @@ onAuthStateChanged(auth, async (usuario) => {
     window.location.href = "../paginas/login.html";
     return;
   }
+
+  const snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  const rol  = snap.exists() ? snap.data().rol : null;
+
+  if (rol === "editor") {
+    window.location.href = "../editor/index.html";
+    return;
+  }
+  if (rol !== "escritor") {
+    window.location.href = "../paginas/login.html";
+    return;
+  }
+
   uidActual = usuario.uid;
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
   cargarBorradores();
