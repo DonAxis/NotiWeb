@@ -139,6 +139,9 @@ a {
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* Gradiente oscuro sobre la imagen */
