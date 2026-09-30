@@ -39,18 +39,27 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
   window.location.href = "../paginas/login.html";
 });
 
-// --- VISTA PREVIA DE IMÁGENES ---
-function agregarVistaPrevia(inputId, imgId, contenedorId) {
-  document.getElementById(inputId).addEventListener("change", (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    document.getElementById(imgId).src = URL.createObjectURL(archivo);
-    document.getElementById(contenedorId).style.display = "block";
-  });
-}
-agregarVistaPrevia("imagen",  "vista-previa",  "vista-previa-contenedor");
-agregarVistaPrevia("imagen2", "vista-previa2", "vista-previa2-contenedor");
-agregarVistaPrevia("imagen3", "vista-previa3", "vista-previa3-contenedor");
+// --- VISTA PREVIA DE IMAGEN ---
+document.getElementById("imagen").addEventListener("change", (e) => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  document.getElementById("vista-previa").src = URL.createObjectURL(archivo);
+  document.getElementById("vista-previa-contenedor").style.display = "block";
+});
+
+// --- MOSTRAR/OCULTAR SELECTOR DE CONTINENTE ---
+document.getElementById("categoria").addEventListener("change", (e) => {
+  const campoContinente = document.getElementById("campo-continente");
+  const selectContinente = document.getElementById("continente");
+  if (e.target.value === "mundo") {
+    campoContinente.style.display = "block";
+    selectContinente.required = true;
+  } else {
+    campoContinente.style.display = "none";
+    selectContinente.required = false;
+    selectContinente.value = "";
+  }
+});
 
 // --- HELPER: subir imagen a Cloudinary ---
 async function subirImagen(archivo) {
@@ -70,42 +79,33 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
   const btnEnviar   = document.getElementById("btn-enviar");
   const estadoTexto = document.getElementById("form-estado");
 
-  const titulo    = document.getElementById("titulo").value.trim();
-  const categoria = document.getElementById("categoria").value;
-  const fuente    = document.getElementById("fuente").value.trim();
-  const contenido = document.getElementById("contenido").value.trim();
-  const archivo1  = document.getElementById("imagen").files[0];
-  const archivo2  = document.getElementById("imagen2").files[0];
-  const archivo3  = document.getElementById("imagen3").files[0];
+  const titulo     = document.getElementById("titulo").value.trim();
+  const categoria  = document.getElementById("categoria").value;
+  const continente = document.getElementById("continente").value;
+  const contenido  = document.getElementById("contenido").value.trim();
+  const archivo    = document.getElementById("imagen").files[0];
 
-  if (!archivo1) {
+  if (!archivo) {
     estadoTexto.textContent = "La imagen principal es obligatoria.";
+    estadoTexto.style.color = "var(--rojo)";
+    return;
+  }
+
+  if (categoria === "mundo" && !continente) {
+    estadoTexto.textContent = "Selecciona el continente.";
     estadoTexto.style.color = "var(--rojo)";
     return;
   }
 
   btnEnviar.disabled      = true;
   estadoTexto.style.color = "#555";
-  estadoTexto.textContent = "Subiendo imagen principal...";
+  estadoTexto.textContent = "Subiendo imagen...";
 
   try {
-    const imagenURL = await subirImagen(archivo1);
-
-    let imagen2URL = null;
-    if (archivo2) {
-      estadoTexto.textContent = "Subiendo imagen 2...";
-      imagen2URL = await subirImagen(archivo2);
-    }
-
-    let imagen3URL = null;
-    if (archivo3) {
-      estadoTexto.textContent = "Subiendo imagen 3...";
-      imagen3URL = await subirImagen(archivo3);
-    }
+    const imagenURL = await subirImagen(archivo);
 
     estadoTexto.textContent = "Guardando artículo...";
 
-    // Construir documento — solo incluir campos opcionales si tienen valor
     const articulo = {
       titulo,
       contenido,
@@ -115,17 +115,15 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
       categoria,
       uid:       uidActual
     };
-    if (fuente)     articulo.fuente     = fuente;
-    if (imagen2URL) articulo.imagen2URL = imagen2URL;
-    if (imagen3URL) articulo.imagen3URL = imagen3URL;
+    if (continente) articulo.continente = continente;
 
     await addDoc(collection(db, "articulos"), articulo);
 
     estadoTexto.style.color = "green";
     estadoTexto.textContent = "Borrador enviado. El editor lo revisará pronto.";
     e.target.reset();
-    ["vista-previa-contenedor","vista-previa2-contenedor","vista-previa3-contenedor"]
-      .forEach(id => document.getElementById(id).style.display = "none");
+    document.getElementById("vista-previa-contenedor").style.display = "none";
+    document.getElementById("campo-continente").style.display = "none";
     cargarBorradores();
 
   } catch (error) {

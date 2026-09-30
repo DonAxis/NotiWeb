@@ -138,6 +138,85 @@ tabs.forEach(tab => {
   });
 });
 
+// --- SECCIÓN MUNDO: cargar artículos por continente ---
+async function cargarArticulosMundo(continente) {
+  const contenedor = document.getElementById("mundo-articulos");
+  contenedor.innerHTML = "<p class='mundo-vacio'>Cargando...</p>";
+
+  try {
+    const q = query(
+      collection(db, "articulos"),
+      where("estado",     "==", "publicado"),
+      where("categoria",  "==", "mundo"),
+      where("continente", "==", continente),
+      orderBy("fechaPublicacion", "desc"),
+      limit(9)
+    );
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      contenedor.innerHTML = "<p class='mundo-vacio'>Sin artículos en este continente por ahora.</p>";
+      return;
+    }
+
+    contenedor.innerHTML = "";
+    snap.forEach(documento => {
+      const a = { _id: documento.id, ...documento.data() };
+      const tarjeta = document.createElement("article");
+      tarjeta.className = "articulo mundo-tarjeta";
+      tarjeta.style.backgroundImage = `url(${a.imagenURL})`;
+      tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${a.titulo}</p></div>`;
+      tarjeta.addEventListener("click", () => {
+        window.location.href = `paginas/articulo.html?id=${a._id}`;
+      });
+      contenedor.appendChild(tarjeta);
+    });
+
+  } catch (error) {
+    contenedor.innerHTML = "<p class='mundo-vacio'>Error al cargar artículos.</p>";
+    console.error(error);
+  }
+}
+
+// --- MAPA MUNDIAL: eventos de continentes ---
+const continentes = document.querySelectorAll(".continente");
+const panelMundo  = document.getElementById("mundo-panel");
+const tituloCont  = document.getElementById("mundo-titulo-continente");
+let continenteActivo = null;
+
+continentes.forEach(g => {
+  const activar = () => {
+    const valor  = g.dataset.continente;
+    const nombre = g.dataset.nombre;
+
+    if (continenteActivo) continenteActivo.classList.remove("activo");
+
+    if (continenteActivo === g) {
+      // segundo clic: cerrar panel
+      panelMundo.style.display = "none";
+      continenteActivo = null;
+      return;
+    }
+
+    g.classList.add("activo");
+    continenteActivo = g;
+    tituloCont.textContent = nombre;
+    panelMundo.style.display = "block";
+    cargarArticulosMundo(valor);
+    panelMundo.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
+  g.addEventListener("click", activar);
+  g.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activar(); }
+  });
+});
+
+document.getElementById("mundo-cerrar").addEventListener("click", () => {
+  panelMundo.style.display = "none";
+  if (continenteActivo) { continenteActivo.classList.remove("activo"); continenteActivo = null; }
+});
+
 // --- INICIALIZAR ---
 const tabActivo = document.querySelector(".tab.activo");
 cargarUltimasNoticias();

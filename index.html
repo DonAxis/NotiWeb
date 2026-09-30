@@ -18,6 +18,7 @@
         <a href="#">Salud</a>
         <a href="#">Tecnología</a>
         <a href="#">Medio ambiente</a>
+        <a href="#seccion-mundo">Mundo</a>
       </nav>
     </div>
   </header>
@@ -70,6 +71,66 @@
         <button class="carrusel-btn carrusel-prev" aria-label="Anterior">&#8249;</button>
         <div id="carrusel" class="carrusel"></div>
         <button class="carrusel-btn carrusel-next" aria-label="Siguiente">&#8250;</button>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓN: MUNDO -->
+    <section class="seccion" id="seccion-mundo">
+      <h2 class="seccion-titulo">MUNDO</h2>
+
+      <div class="mapa-contenedor">
+        <svg class="mapa-mundial" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
+
+          <rect width="1000" height="500" fill="#0d1b2a"/>
+
+          <!-- América del Norte -->
+          <g class="continente" data-continente="america-norte" data-nombre="América del Norte" tabindex="0" role="button">
+            <path d="M 88,22 L 188,18 L 235,30 L 272,52 L 285,85 L 285,132 L 265,178 L 238,218 L 205,240 L 170,242 L 135,225 L 102,200 L 80,170 L 65,138 L 68,95 L 80,58 Z"/>
+            <text x="175" y="118" text-anchor="middle"><tspan x="175" dy="0">América</tspan><tspan x="175" dy="22">del Norte</tspan></text>
+          </g>
+
+          <!-- América del Sur -->
+          <g class="continente" data-continente="america-sur" data-nombre="América del Sur" tabindex="0" role="button">
+            <path d="M 155,252 L 215,245 L 258,262 L 272,298 L 272,355 L 252,408 L 222,448 L 192,452 L 162,432 L 140,392 L 132,348 L 138,292 Z"/>
+            <text x="200" y="342" text-anchor="middle"><tspan x="200" dy="0">América</tspan><tspan x="200" dy="22">del Sur</tspan></text>
+          </g>
+
+          <!-- Europa -->
+          <g class="continente" data-continente="europa" data-nombre="Europa" tabindex="0" role="button">
+            <path d="M 422,28 L 462,22 L 505,28 L 522,55 L 512,90 L 488,112 L 458,122 L 428,102 L 415,72 Z"/>
+            <text x="468" y="72" text-anchor="middle">Europa</text>
+          </g>
+
+          <!-- África -->
+          <g class="continente" data-continente="africa" data-nombre="África" tabindex="0" role="button">
+            <path d="M 415,128 L 482,118 L 548,128 L 572,162 L 575,222 L 565,288 L 542,348 L 505,385 L 468,388 L 428,362 L 402,305 L 395,248 L 402,185 Z"/>
+            <text x="484" y="258" text-anchor="middle">África</text>
+          </g>
+
+          <!-- Asia -->
+          <g class="continente" data-continente="asia" data-nombre="Asia" tabindex="0" role="button">
+            <path d="M 518,22 L 682,15 L 845,18 L 948,48 L 962,108 L 938,168 L 885,218 L 805,262 L 725,275 L 645,262 L 575,232 L 540,192 L 515,145 L 515,72 Z"/>
+            <text x="738" y="148" text-anchor="middle">Asia</text>
+          </g>
+
+          <!-- Oceanía -->
+          <g class="continente" data-continente="oceania" data-nombre="Oceanía" tabindex="0" role="button">
+            <path d="M 712,295 L 778,282 L 838,278 L 882,302 L 892,345 L 875,382 L 838,405 L 792,408 L 748,398 L 715,372 L 698,335 Z"/>
+            <text x="795" y="348" text-anchor="middle">Oceanía</text>
+          </g>
+
+        </svg>
+        <p class="mapa-instruccion">Selecciona un continente para ver sus noticias</p>
+      </div>
+
+      <!-- Panel de artículos del continente seleccionado -->
+      <div class="mundo-panel" id="mundo-panel" style="display:none;">
+        <div class="mundo-panel-encabezado">
+          <h3 id="mundo-titulo-continente"></h3>
+          <button class="mundo-cerrar" id="mundo-cerrar" aria-label="Cerrar">✕</button>
+        </div>
+        <div id="mundo-articulos" class="mundo-grid"></div>
       </div>
 
     </section>
