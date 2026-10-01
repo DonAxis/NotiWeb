@@ -23,6 +23,12 @@
     </div>
   </header>
 
+  <!-- AVISO EN CONSTRUCCIÓN — quitar cuando haya noticias publicadas -->
+  <div class="aviso-construccion">
+    <span class="aviso-icono">🔧</span>
+    <p>Sitio en construcción &mdash; Las primeras noticias estarán disponibles muy pronto.</p>
+  </div>
+
   <main class="contenedor">
 
     <!-- SECCIÓN: ÚLTIMAS NOTICIAS -->
@@ -80,38 +86,41 @@
       <h2 class="seccion-titulo">MUNDO</h2>
 
       <div class="mapa-contenedor">
-        <svg class="mapa-mundial" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
+        <!-- Imagen del mapa mundial (proyección equirectangular) -->
+        <!-- Reemplaza "img/mapa-mundo.png" con la ruta real de tu imagen -->
+        <img class="mapa-imagen" src="img/mapa-mundo.png" alt="Mapa mundial">
 
-          <rect width="1000" height="500" fill="#0d1b2a"/>
+        <!-- Capa SVG: paths transparentes alineados sobre la imagen -->
+        <svg class="mapa-overlay" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
 
           <!-- América del Norte -->
           <g class="continente" data-continente="america-norte" data-nombre="América del Norte" tabindex="0" role="button">
-            <path d="M 88,22 L 188,18 L 235,30 L 272,52 L 285,85 L 285,132 L 265,178 L 238,218 L 205,240 L 170,242 L 135,225 L 102,200 L 80,170 L 65,138 L 68,95 L 80,58 Z"/>
-            <text x="175" y="118" text-anchor="middle"><tspan x="175" dy="0">América</tspan><tspan x="175" dy="22">del Norte</tspan></text>
+            <path d="M 33,67 L 47,56 L 108,56 L 250,44 L 300,56 L 353,119 L 286,153 L 278,181 L 258,167 L 244,206 L 194,183 L 153,144 L 153,114 L 125,89 L 89,86 L 47,97 Z"/>
+            <text x="200" y="110" text-anchor="middle"><tspan x="200" dy="0">América</tspan><tspan x="200" dy="22">del Norte</tspan></text>
           </g>
 
           <!-- América del Sur -->
           <g class="continente" data-continente="america-sur" data-nombre="América del Sur" tabindex="0" role="button">
-            <path d="M 155,252 L 215,245 L 258,262 L 272,298 L 272,355 L 252,408 L 222,448 L 192,452 L 162,432 L 140,392 L 132,348 L 138,292 Z"/>
-            <text x="200" y="342" text-anchor="middle"><tspan x="200" dy="0">América</tspan><tspan x="200" dy="22">del Sur</tspan></text>
+            <path d="M 294,219 L 330,219 L 356,233 L 403,264 L 394,283 L 381,314 L 361,342 L 353,356 L 317,403 L 294,392 L 305,300 L 286,256 L 283,244 Z"/>
+            <text x="330" y="308" text-anchor="middle"><tspan x="330" dy="0">América</tspan><tspan x="330" dy="22">del Sur</tspan></text>
           </g>
 
           <!-- Europa -->
           <g class="continente" data-continente="europa" data-nombre="Europa" tabindex="0" role="button">
-            <path d="M 422,28 L 462,22 L 505,28 L 522,55 L 512,90 L 488,112 L 458,122 L 428,102 L 415,72 Z"/>
-            <text x="468" y="72" text-anchor="middle">Europa</text>
+            <path d="M 475,147 L 475,128 L 494,117 L 500,108 L 511,103 L 528,92 L 522,78 L 544,56 L 578,56 L 581,69 L 586,83 L 589,94 L 606,119 L 581,125 L 575,133 L 561,147 L 544,144 L 533,125 L 514,131 L 500,144 L 486,150 Z"/>
+            <text x="540" y="105" text-anchor="middle">Europa</text>
           </g>
 
           <!-- África -->
           <g class="continente" data-continente="africa" data-nombre="África" tabindex="0" role="button">
-            <path d="M 415,128 L 482,118 L 548,128 L 572,162 L 575,222 L 565,288 L 542,348 L 505,385 L 468,388 L 428,362 L 402,305 L 395,248 L 402,185 Z"/>
-            <text x="484" y="258" text-anchor="middle">África</text>
+            <path d="M 483,150 L 508,147 L 528,147 L 561,158 L 594,164 L 619,217 L 641,217 L 614,261 L 597,319 L 550,344 L 533,330 L 522,297 L 522,264 L 453,225 L 453,192 L 497,167 Z"/>
+            <text x="540" y="253" text-anchor="middle">África</text>
           </g>
 
           <!-- Asia -->
           <g class="continente" data-continente="asia" data-nombre="Asia" tabindex="0" role="button">
-            <path d="M 518,22 L 682,15 L 845,18 L 948,48 L 962,108 L 938,168 L 885,218 L 805,262 L 725,275 L 645,262 L 575,232 L 540,192 L 515,145 L 515,72 Z"/>
-            <text x="738" y="148" text-anchor="middle">Asia</text>
+            <path d="M 572,139 L 583,72 L 667,97 L 750,50 L 972,69 L 903,153 L 839,208 L 800,222 L 758,189 L 722,214 L 722,228 L 703,208 L 694,186 L 625,217 L 650,183 L 589,172 L 597,150 Z"/>
+            <text x="790" y="148" text-anchor="middle">Asia</text>
           </g>
 
           <!-- Oceanía -->
