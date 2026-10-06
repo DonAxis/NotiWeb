@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vigía Científico</title>
+  <title>Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
@@ -11,14 +11,14 @@
   <!-- ENCABEZADO -->
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="index.html" class="logo">GACETA<span> ILB</span></a>
       <nav class="nav-principal">
         <a href="#">Últimas noticias</a>
-        <a href="#">Escolares</a>
-        <a href="#">Salud</a>
-        <a href="#">Tecnología</a>
-        <a href="#">Medio ambiente</a>
-        <a href="#seccion-mundo">Mundo</a>
+        <a href="#">Avisos</a>
+        <a href="#">Vida Estudiantil</a>
+        <a href="#">Deportes</a>
+        <a href="#">Logros</a>
+        <a href="#seccion-eventos">Eventos</a>
       </nav>
     </div>
   </header>
@@ -53,8 +53,8 @@
     <!-- SECCIÓN: CIENCIA Y TECNOLOGÍA -->
     <!-- Los artículos se insertan dinámicamente desde Firestore via articulos.js -->
     <section class="seccion">
-      <h2 class="seccion-titulo">CIENCIA Y TECNOLOGÍA</h2>
-      <div id="grid-ciencia" class="grid-dos">
+      <h2 class="seccion-titulo">VIDA ESTUDIANTIL</h2>
+      <div id="grid-vida" class="grid-dos">
         <article class="articulo articulo-mediano"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
         <article class="articulo articulo-mediano"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
       </div>
@@ -66,11 +66,11 @@
       <h3 class="interesar-titulo">Te puede interesar...</h3>
 
       <div class="tabs">
-        <button class="tab activo" data-categoria="investigacion">INVESTIGACIÓN</button>
-        <button class="tab" data-categoria="salud">SALUD</button>
-        <button class="tab" data-categoria="tecnologia">TECNOLOGÍA</button>
-        <button class="tab" data-categoria="academia">ACADEMIA</button>
-        <button class="tab" data-categoria="ambiente">MEDIO AMBIENTE</button>
+        <button class="tab activo" data-categoria="noticias">NOTICIAS</button>
+        <button class="tab" data-categoria="avisos">AVISOS</button>
+        <button class="tab" data-categoria="deportes">DEPORTES</button>
+        <button class="tab" data-categoria="logros">LOGROS</button>
+        <button class="tab" data-categoria="eventos">EVENTOS</button>
       </div>
 
       <div class="carrusel-contenedor">
@@ -82,13 +82,13 @@
     </section>
 
     <!-- SECCIÓN: MUNDO -->
-    <section class="seccion" id="seccion-mundo">
-      <h2 class="seccion-titulo">MUNDO</h2>
+    <section class="seccion" id="seccion-eventos">
+      <h2 class="seccion-titulo">EVENTOS</h2>
 
       <div class="mapa-contenedor">
         <!-- Imagen del mapa mundial (proyección equirectangular) -->
         <!-- Reemplaza "img/mapa-mundo.png" con la ruta real de tu imagen -->
-        <img class="mapa-imagen" src="paginas/img/mapa.png" alt="Mapa mundial">
+        <img class="mapa-imagen" src="img/mapa.png" alt="Mapa mundial">
 
         <!-- Capa SVG: paths transparentes alineados sobre la imagen -->
         <svg class="mapa-overlay" viewBox="0 -30 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
@@ -142,7 +142,7 @@
   </main>
 
   <footer class="pie">
-    <p>© 2026 Vigía Científico — Ciencia al alcance de todos</p>
+    <p>© 2026 Gaceta ILB — Instituto ILB</p>
   </footer>
 
   <script type="module" src="js/articulos.js"></script>

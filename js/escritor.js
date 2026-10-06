@@ -12,7 +12,7 @@ let uidActual = null;
 
 onAuthStateChanged(auth, async (usuario) => {
   if (!usuario) {
-    window.location.href = "../paginas/login.html";
+    window.location.href = "../login.html";
     return;
   }
 
@@ -24,7 +24,7 @@ onAuthStateChanged(auth, async (usuario) => {
     return;
   }
   if (rol !== "escritor") {
-    window.location.href = "../paginas/login.html";
+    window.location.href = "../login.html";
     return;
   }
 
@@ -36,7 +36,7 @@ onAuthStateChanged(auth, async (usuario) => {
 // --- CERRAR SESIÓN ---
 document.getElementById("btn-salir").addEventListener("click", async () => {
   await signOut(auth);
-  window.location.href = "../paginas/login.html";
+  window.location.href = "../login.html";
 });
 
 // --- VISTA PREVIA DE IMAGEN ---

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Artículo — Vigía Científico</title>
-  <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="css/estilos.css">
   <style>
     .articulo-pagina {
       max-width: 720px;
@@ -79,9 +79,9 @@
 
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
       <nav class="nav-principal">
-        <a href="../index.html">← Volver</a>
+        <a href="index.html">← Volver</a>
       </nav>
     </div>
   </header>
@@ -95,7 +95,7 @@
   </footer>
 
   <script type="module">
-    import { db }           from "../js/firebase.js";
+    import { db }           from "js/firebase.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
     const params     = new URLSearchParams(window.location.search);

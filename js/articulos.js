@@ -22,7 +22,7 @@ async function cargarUltimasNoticias() {
       el.querySelector(".articulo-titulo").textContent = articulos[0].titulo;
       el.style.cursor = "pointer";
       el.addEventListener("click", () => {
-        window.location.href = `paginas/articulo.html?id=${articulos[0]._id}`;
+        window.location.href = `articulo.html?id=${articulos[0]._id}`;
       });
     }
 
@@ -33,7 +33,7 @@ async function cargarUltimasNoticias() {
       secundarios[i].querySelector(".articulo-titulo").textContent = a.titulo;
       secundarios[i].style.cursor = "pointer";
       secundarios[i].addEventListener("click", () => {
-        window.location.href = `paginas/articulo.html?id=${a._id}`;
+        window.location.href = `articulo.html?id=${a._id}`;
       });
     });
 
@@ -42,13 +42,13 @@ async function cargarUltimasNoticias() {
   }
 }
 
-// --- CIENCIA Y TECNOLOGÍA (2 más recientes de tecnologia) ---
-async function cargarCiencia() {
+// --- VIDA ESTUDIANTIL (2 más recientes de vida-estudiantil) ---
+async function cargarVidaEstudiantil() {
   try {
     const q = query(
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
-      where("categoria", "==", "tecnologia"),
+      where("categoria", "==", "vida-estudiantil"),
       orderBy("fechaPublicacion", "desc"),
       limit(2)
     );
@@ -56,14 +56,14 @@ async function cargarCiencia() {
     const articulos = [];
     snap.forEach(doc => articulos.push({ _id: doc.id, ...doc.data() }));
 
-    const tarjetas = document.getElementById("grid-ciencia").querySelectorAll(".articulo");
+    const tarjetas = document.getElementById("grid-vida").querySelectorAll(".articulo");
     articulos.forEach((a, i) => {
       if (!tarjetas[i]) return;
       tarjetas[i].style.backgroundImage = `url(${a.imagenURL})`;
       tarjetas[i].querySelector(".articulo-titulo").textContent = a.titulo;
       tarjetas[i].style.cursor = "pointer";
       tarjetas[i].addEventListener("click", () => {
-        window.location.href = `paginas/articulo.html?id=${a._id}`;
+        window.location.href = `articulo.html?id=${a._id}`;
       });
     });
 
@@ -77,8 +77,7 @@ async function cargarCarrusel(categoria) {
   const carrusel = document.getElementById("carrusel");
   carrusel.innerHTML = "";
 
-  // El tab "ambiente" guarda artículos con categoría "medio-ambiente" en Firestore
-  const categoriaFirestore = categoria === "ambiente" ? "medio-ambiente" : categoria;
+  const categoriaFirestore = categoria;
 
   try {
     const q = query(
@@ -104,7 +103,7 @@ async function cargarCarrusel(categoria) {
       tarjeta.style.cursor = "pointer";
       tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${a.titulo}</p></div>`;
       tarjeta.addEventListener("click", () => {
-        window.location.href = `paginas/articulo.html?id=${a._id}`;
+        window.location.href = `articulo.html?id=${a._id}`;
       });
       carrusel.appendChild(tarjeta);
     });
@@ -167,7 +166,7 @@ async function cargarArticulosMundo(continente) {
       tarjeta.style.backgroundImage = `url(${a.imagenURL})`;
       tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${a.titulo}</p></div>`;
       tarjeta.addEventListener("click", () => {
-        window.location.href = `paginas/articulo.html?id=${a._id}`;
+        window.location.href = `articulo.html?id=${a._id}`;
       });
       contenedor.appendChild(tarjeta);
     });
@@ -220,5 +219,5 @@ document.getElementById("mundo-cerrar").addEventListener("click", () => {
 // --- INICIALIZAR ---
 const tabActivo = document.querySelector(".tab.activo");
 cargarUltimasNoticias();
-cargarCiencia();
-cargarCarrusel(tabActivo ? tabActivo.dataset.categoria : "investigacion");
+cargarVidaEstudiantil();
+cargarCarrusel(tabActivo ? tabActivo.dataset.categoria : "noticias");

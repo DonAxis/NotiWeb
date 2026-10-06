@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso — Vigía Científico</title>
-  <link rel="stylesheet" href="../css/estilos.css">
+  <link rel="stylesheet" href="css/estilos.css">
   <style>
     .login-contenedor {
       min-height: 80vh;
@@ -118,7 +118,7 @@
 
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
     </div>
   </header>
 
@@ -158,7 +158,7 @@
   </main>
 
   <script type="module">
-    import { auth, db }                                        from "../js/firebase.js";
+    import { auth, db }                                        from "js/firebase.js";
     import { signInWithEmailAndPassword,
              sendPasswordResetEmail }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
     import { doc, getDoc }                           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
@@ -245,7 +245,7 @@
 
       try {
         await sendPasswordResetEmail(auth, correoReset, {
-          url: window.location.origin + "/NotiWeb/paginas/login.html"
+          url: window.location.origin + "/NotiWeb/login.html"
         });
         okMsg.style.display = "block";
       } catch (error) {
