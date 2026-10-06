@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso — Vigía Científico</title>
+  <title>Acceso — Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
   <style>
     .login-contenedor {
@@ -118,7 +118,7 @@
 
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="index.html" class="logo">GACETA<span> ILB</span></a>
     </div>
   </header>
 
@@ -205,6 +205,9 @@
           window.location.href = "editor/index.html";
         } else if (rolUsuario === "admin") {
           window.location.href = "admin.html";
+        } else if (rolUsuario === "pendiente") {
+          await auth.signOut();
+          mostrarError("Tu solicitud aún no ha sido aprobada. El equipo editorial te avisará cuando tengas acceso.");
         } else {
           await auth.signOut();
           mostrarError("Rol no reconocido. Contacta al administrador.");

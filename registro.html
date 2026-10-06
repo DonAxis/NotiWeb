@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Únete como escritor — Gaceta ILB</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <style>
+    .login-contenedor {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-caja {
+      background: #fff;
+      border-radius: 4px;
+      padding: 40px 48px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-titulo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--rojo);
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+    .login-subtitulo {
+      font-size: 0.82rem;
+      color: #888;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .campo label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #444;
+    }
+    .campo input {
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      border-radius: 2px;
+      transition: border-color 0.2s;
+    }
+    .campo input:focus {
+      outline: none;
+      border-color: var(--rojo);
+    }
+    .btn-enviar {
+      width: 100%;
+      background: var(--rojo);
+      color: #fff;
+      border: none;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 2px;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-enviar:hover    { opacity: 0.85; }
+    .btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-ok {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 4px;
+      padding: 16px;
+      font-size: 0.88rem;
+      text-align: center;
+      display: none;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    .form-error {
+      color: var(--rojo);
+      font-size: 0.82rem;
+      margin-top: 14px;
+      text-align: center;
+      display: none;
+    }
+    .link-login {
+      display: block;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 18px;
+    }
+    .link-login a { color: var(--rojo); text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <a href="index.html" class="logo">GACETA<span> ILB</span></a>
+    </div>
+  </header>
+
+  <main class="contenedor login-contenedor">
+    <div class="login-caja">
+      <p class="login-titulo">ÚNETE COMO ESCRITOR</p>
+      <p class="login-subtitulo">Solo para correos <strong>@ilb.edu.mx</strong> — el equipo editorial revisará tu solicitud</p>
+
+      <form id="form-registro">
+        <div class="campo">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" required maxlength="80" placeholder="Tu nombre">
+        </div>
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" required autocomplete="email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="campo">
+          <label for="contrasena">Contraseña</label>
+          <input type="password" id="contrasena" required minlength="6" placeholder="Mínimo 6 caracteres">
+        </div>
+        <button type="submit" class="btn-enviar" id="btn-enviar">Enviar solicitud</button>
+      </form>
+
+      <div class="form-ok" id="form-ok">
+        ¡Solicitud enviada!<br>
+        En cuanto el equipo editorial la apruebe podrás iniciar sesión.
+      </div>
+      <p class="form-error" id="form-error"></p>
+
+      <p class="link-login">¿Ya tienes cuenta? <a href="login.html">Iniciar sesión</a></p>
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth, db }                                      from "js/firebase.js";
+    import { createUserWithEmailAndPassword, signOut }       from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+    import { doc, setDoc }                                   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    const form     = document.getElementById("form-registro");
+    const btnEnv   = document.getElementById("btn-enviar");
+    const msgOk    = document.getElementById("form-ok");
+    const msgError = document.getElementById("form-error");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgOk.style.display    = "none";
+      msgError.style.display = "none";
+      btnEnv.disabled        = true;
+
+      const nombre     = document.getElementById("nombre").value.trim();
+      const correo     = document.getElementById("correo").value.trim();
+      const contrasena = document.getElementById("contrasena").value;
+
+      if (!correo.endsWith("@ilb.edu.mx")) {
+        msgError.textContent   = "Solo se aceptan correos @ilb.edu.mx.";
+        msgError.style.display = "block";
+        btnEnv.disabled        = false;
+        return;
+      }
+
+      try {
+        const resultado = await createUserWithEmailAndPassword(auth, correo, contrasena);
+        await setDoc(doc(db, "usuarios", resultado.user.uid), { nombre, correo, rol: "pendiente" });
+        await signOut(auth);
+
+        form.style.display  = "none";
+        msgOk.style.display = "block";
+
+      } catch (error) {
+        const codigos = {
+          "auth/email-already-in-use": "Ese correo ya está registrado.",
+          "auth/invalid-email":        "El correo no es válido.",
+          "auth/weak-password":        "La contraseña debe tener al menos 6 caracteres.",
+        };
+        msgError.textContent   = codigos[error.code] ?? "Error al enviar la solicitud. Intenta de nuevo.";
+        msgError.style.display = "block";
+        btnEnv.disabled        = false;
+      }
+    });
+  </script>
+
+</body>
+</html>

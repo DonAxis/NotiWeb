@@ -4,8 +4,9 @@ import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/f
 import { initializeApp }                         from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword,
          signOut as signOutSecundario }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { collection, doc, setDoc,
-         getDocs, deleteDoc, getDoc }            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { collection, doc, setDoc, updateDoc,
+         getDocs, deleteDoc, getDoc,
+         query, where }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // App secundaria para crear usuarios sin cerrar la sesión del admin
 const appSecundaria  = initializeApp(firebaseConfig, "secundaria");
@@ -27,6 +28,7 @@ onAuthStateChanged(auth, async (usuario) => {
   }
 
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
+  cargarPendientes();
   cargarUsuarios();
 });
 
@@ -81,6 +83,60 @@ document.getElementById("form-registro").addEventListener("submit", async (e) =>
     btnRegistrar.disabled = false;
   }
 });
+
+// --- SOLICITUDES PENDIENTES ---
+async function cargarPendientes() {
+  const tbody = document.getElementById("pendientes-body");
+  tbody.innerHTML = `<tr><td colspan="3" style="color:#888; padding:16px;">Cargando...</td></tr>`;
+
+  try {
+    const q    = query(collection(db, "usuarios"), where("rol", "==", "pendiente"));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      tbody.innerHTML = `<tr><td colspan="3" style="color:#888; padding:16px;">Sin solicitudes pendientes.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = "";
+    snap.forEach((documento) => {
+      const { nombre, correo } = documento.data();
+      const uid = documento.id;
+      tbody.innerHTML += `
+        <tr>
+          <td>${nombre ?? "—"}</td>
+          <td>${correo ?? "—"}</td>
+          <td>
+            <button class="btn-aprobar"   data-uid="${uid}" data-nombre="${nombre}">Aprobar</button>
+            <button class="btn-eliminar"  data-uid="${uid}" data-nombre="${nombre}">Rechazar</button>
+          </td>
+        </tr>`;
+    });
+
+    tbody.querySelectorAll(".btn-aprobar").forEach(btn =>
+      btn.addEventListener("click", () => aprobarUsuario(btn.dataset.uid, btn.dataset.nombre))
+    );
+    tbody.querySelectorAll(".btn-eliminar").forEach(btn =>
+      btn.addEventListener("click", () => eliminarUsuario(btn.dataset.uid, btn.dataset.nombre))
+    );
+
+  } catch (error) {
+    tbody.innerHTML = `<tr><td colspan="3" style="color:var(--rojo); padding:16px;">Error al cargar solicitudes.</td></tr>`;
+    console.error(error);
+  }
+}
+
+async function aprobarUsuario(uid, nombre) {
+  if (!confirm(`¿Aprobar a "${nombre}" como escritor?`)) return;
+  try {
+    await updateDoc(doc(db, "usuarios", uid), { rol: "escritor" });
+    cargarPendientes();
+    cargarUsuarios();
+  } catch (error) {
+    alert("Error al aprobar. Intenta de nuevo.");
+    console.error(error);
+  }
+}
 
 // --- CARGAR USUARIOS ---
 async function cargarUsuarios() {

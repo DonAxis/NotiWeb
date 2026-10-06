@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Admin — Vigía Científico</title>
+  <title>Panel Admin — Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
   <link rel="stylesheet" href="css/panel.css">
   <style>
@@ -36,9 +36,23 @@
       font-weight: 700;
       text-transform: capitalize;
     }
-    .badge-escritor { background: #e3f2fd; color: #1565c0; }
-    .badge-editor   { background: #e8f5e9; color: #2e7d32; }
-    .badge-admin    { background: #fce4ec; color: #b71c1c; }
+    .badge-escritor  { background: #e3f2fd; color: #1565c0; }
+    .badge-editor    { background: #e8f5e9; color: #2e7d32; }
+    .badge-admin     { background: #fce4ec; color: #b71c1c; }
+    .badge-pendiente { background: #fff8e1; color: #e65100; }
+    .btn-aprobar {
+      background: none;
+      border: 1px solid #c8e6c9;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 2px;
+      color: #2e7d32;
+      font-weight: 700;
+      margin-right: 6px;
+      transition: background 0.15s;
+    }
+    .btn-aprobar:hover { background: #e8f5e9; }
     .btn-eliminar {
       background: none;
       border: 1px solid #ddd;
@@ -56,7 +70,7 @@
 
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="index.html" class="logo">GACETA<span> ILB</span></a>
       <div class="panel-usuario">
         <span id="nombre-usuario"></span>
         <button id="btn-salir" class="btn-salir">Salir</button>
@@ -65,6 +79,25 @@
   </header>
 
   <main class="contenedor">
+
+    <!-- Solicitudes pendientes de aprobación -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">SOLICITUDES PENDIENTES</h2>
+      <div style="background:#fff; border-radius:4px; overflow:auto;">
+        <table class="tabla-usuarios">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="pendientes-body">
+            <tr><td colspan="3" style="color:#888; padding:16px;">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <!-- Registrar nuevo usuario -->
     <section class="seccion">
