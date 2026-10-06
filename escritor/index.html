@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Escritor — Vigía Científico</title>
+  <title>Panel Escritor — Gaceta ILB</title>
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="../css/panel.css">
 </head>
@@ -11,7 +11,7 @@
 
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="../index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="../index.html" class="logo">GACETA<span> ILB</span></a>
       <div class="panel-usuario">
         <span id="nombre-usuario"></span>
         <button id="btn-salir" class="btn-salir">Salir</button>
@@ -22,12 +22,16 @@
   <main class="contenedor">
 
     <section class="seccion">
-      <h2 class="seccion-titulo">NUEVO ARTÍCULO</h2>
+      <h2 class="seccion-titulo" id="seccion-titulo">NUEVO ARTÍCULO</h2>
+
+      <div id="aviso-revision" style="display:none; background:#fff8e1; border-left:3px solid #f57f17; padding:10px 14px; border-radius:2px; margin-bottom:16px; font-size:0.85rem; color:#555;">
+        Tu artículo está pendiente de revisión. Puedes editarlo hasta que el editor lo apruebe.
+      </div>
 
       <form id="form-articulo" class="formulario">
 
         <div class="campo">
-          <label for="titulo">Título del reportaje</label>
+          <label for="titulo">Título</label>
           <input type="text" id="titulo" maxlength="200" required placeholder="Título accesible para el lector">
         </div>
 
@@ -35,56 +39,35 @@
           <label for="categoria">Categoría</label>
           <select id="categoria" required>
             <option value="">Selecciona una categoría</option>
-            <option value="salud">Salud</option>
-            <option value="tecnologia">Tecnología</option>
-            <option value="medio-ambiente">Medio ambiente</option>
-            <option value="academia">Academia</option>
-            <option value="investigacion">Investigación</option>
-            <option value="mundo">Mundo</option>
-          </select>
-        </div>
-
-        <div class="campo" id="campo-continente" style="display:none;">
-          <label for="continente">Continente</label>
-          <select id="continente">
-            <option value="">Selecciona un continente</option>
-            <option value="africa">África</option>
-            <option value="america">América</option>
-            <option value="asia">Asia</option>
-            <option value="europa">Europa</option>
-            <option value="oceania">Oceanía</option>
+            <option value="noticias">Noticias</option>
+            <option value="avisos">Avisos</option>
+            <option value="deportes">Deportes</option>
+            <option value="logros">Logros</option>
+            <option value="eventos">Eventos</option>
           </select>
         </div>
 
         <div class="campo">
-          <label for="imagen">Imagen principal <span style="color:var(--rojo);">*</span></label>
-          <input type="file" id="imagen" accept="image/*" required>
-          <p class="campo-ayuda">Requerida. Máx 5 MB. JPG, PNG o WebP.</p>
+          <label for="imagen">Imagen principal</label>
+          <input type="file" id="imagen" accept="image/*">
+          <p class="campo-ayuda">Máx 5 MB · JPG, PNG o WebP · Omite para conservar la imagen actual.</p>
           <div id="vista-previa-contenedor" style="display:none;">
-            <img id="vista-previa" src="" alt="Vista previa" style="max-height:160px; margin-top:8px;">
+            <img id="vista-previa" src="" alt="Vista previa" style="max-height:160px; margin-top:8px; display:block;">
           </div>
         </div>
 
         <div class="campo">
-          <label for="contenido">Texto del reportaje</label>
-          <textarea id="contenido" rows="12" maxlength="50000" required
-            placeholder="Escribe aquí el artículo en lenguaje accesible para el lector general..."></textarea>
+          <label for="contenido">Texto del artículo</label>
+          <textarea id="contenido" rows="14" maxlength="50000" required
+            placeholder="Escribe aquí el artículo..."></textarea>
         </div>
 
         <div class="form-acciones">
           <p class="form-estado" id="form-estado"></p>
-          <button type="submit" class="btn-primario" id="btn-enviar">Enviar borrador</button>
+          <button type="submit" class="btn-primario" id="btn-enviar">Enviar a revisión</button>
         </div>
 
       </form>
-    </section>
-
-    <!-- Lista de borradores propios -->
-    <section class="seccion">
-      <h2 class="seccion-titulo">MIS BORRADORES</h2>
-      <div id="lista-borradores" class="lista-articulos">
-        <p class="lista-vacia">Cargando...</p>
-      </div>
     </section>
 
   </main>

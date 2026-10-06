@@ -1,15 +1,18 @@
-// escritor.js — panel del escritor
+// escritor.js — panel del escritor (un artículo a la vez)
 import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { collection, addDoc, query, where,
-         orderBy, getDocs, getDoc, doc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { collection, addDoc, updateDoc, query,
+         where, limit, getDocs, getDoc,
+         doc, Timestamp }                        from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const CLOUDINARY_URL    = "https://api.cloudinary.com/v1_1/diaki2vi2/image/upload";
 const CLOUDINARY_PRESET = "VIGÍA CIENTÍFICO";
 
-// --- PROTECCIÓN DE RUTA ---
-let uidActual = null;
+let uidActual   = null;
+let borradoreId = null;
+let modoEdicion = false;
 
+// --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
   if (!usuario) {
     window.location.href = "../login.html";
@@ -30,7 +33,7 @@ onAuthStateChanged(auth, async (usuario) => {
 
   uidActual = usuario.uid;
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
-  cargarBorradores();
+  await verificarBorrador();
 });
 
 // --- CERRAR SESIÓN ---
@@ -39,26 +42,58 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
   window.location.href = "../login.html";
 });
 
+// --- VERIFICAR BORRADOR EXISTENTE ---
+// Si existe un borrador propio, precarga el formulario y activa modo edición.
+// Si no hay ninguno, muestra el formulario vacío en modo creación.
+async function verificarBorrador() {
+  try {
+    const q    = query(
+      collection(db, "articulos"),
+      where("estado", "==", "borrador"),
+      where("uid",    "==", uidActual),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const documento = snap.docs[0];
+      const datos     = documento.data();
+      borradoreId     = documento.id;
+      modoEdicion     = true;
+
+      document.getElementById("titulo").value    = datos.titulo    || "";
+      document.getElementById("categoria").value = datos.categoria || "";
+      document.getElementById("contenido").value = datos.contenido || "";
+
+      if (datos.imagenURL) {
+        document.getElementById("vista-previa").src                      = datos.imagenURL;
+        document.getElementById("vista-previa-contenedor").style.display = "block";
+      }
+
+      activarModo("edicion");
+    } else {
+      borradoreId = null;
+      modoEdicion = false;
+      activarModo("creacion");
+    }
+  } catch (error) {
+    console.error("Error al verificar borrador:", error);
+  }
+}
+
+function activarModo(modo) {
+  const esEdicion = modo === "edicion";
+  document.getElementById("seccion-titulo").textContent    = esEdicion ? "TU ARTÍCULO EN REVISIÓN" : "NUEVO ARTÍCULO";
+  document.getElementById("btn-enviar").textContent        = esEdicion ? "Guardar cambios"          : "Enviar a revisión";
+  document.getElementById("aviso-revision").style.display  = esEdicion ? "block"                   : "none";
+}
+
 // --- VISTA PREVIA DE IMAGEN ---
 document.getElementById("imagen").addEventListener("change", (e) => {
   const archivo = e.target.files[0];
   if (!archivo) return;
-  document.getElementById("vista-previa").src = URL.createObjectURL(archivo);
+  document.getElementById("vista-previa").src                      = URL.createObjectURL(archivo);
   document.getElementById("vista-previa-contenedor").style.display = "block";
-});
-
-// --- MOSTRAR/OCULTAR SELECTOR DE CONTINENTE ---
-document.getElementById("categoria").addEventListener("change", (e) => {
-  const campoContinente = document.getElementById("campo-continente");
-  const selectContinente = document.getElementById("continente");
-  if (e.target.value === "mundo") {
-    campoContinente.style.display = "block";
-    selectContinente.required = true;
-  } else {
-    campoContinente.style.display = "none";
-    selectContinente.required = false;
-    selectContinente.value = "";
-  }
 });
 
 // --- HELPER: subir imagen a Cloudinary ---
@@ -68,109 +103,73 @@ async function subirImagen(archivo) {
   formData.append("upload_preset", CLOUDINARY_PRESET);
   const respuesta = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
   if (!respuesta.ok) throw new Error("Error al subir imagen");
-  const datos = await respuesta.json();
-  return datos.secure_url;
+  return (await respuesta.json()).secure_url;
 }
 
-// --- ENVIAR BORRADOR ---
+// --- ENVIAR / GUARDAR ---
 document.getElementById("form-articulo").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const btnEnviar   = document.getElementById("btn-enviar");
   const estadoTexto = document.getElementById("form-estado");
 
-  const titulo     = document.getElementById("titulo").value.trim();
-  const categoria  = document.getElementById("categoria").value;
-  const continente = document.getElementById("continente").value;
-  const contenido  = document.getElementById("contenido").value.trim();
-  const archivo    = document.getElementById("imagen").files[0];
+  const titulo    = document.getElementById("titulo").value.trim();
+  const categoria = document.getElementById("categoria").value;
+  const contenido = document.getElementById("contenido").value.trim();
+  const archivo   = document.getElementById("imagen").files[0];
 
-  if (!archivo) {
+  if (!modoEdicion && !archivo) {
     estadoTexto.textContent = "La imagen principal es obligatoria.";
-    estadoTexto.style.color = "var(--rojo)";
-    return;
-  }
-
-  if (categoria === "mundo" && !continente) {
-    estadoTexto.textContent = "Selecciona el continente.";
     estadoTexto.style.color = "var(--rojo)";
     return;
   }
 
   btnEnviar.disabled      = true;
   estadoTexto.style.color = "#555";
-  estadoTexto.textContent = "Subiendo imagen...";
 
   try {
-    const imagenURL = await subirImagen(archivo);
+    if (modoEdicion) {
+      const actualizacion = { titulo, categoria, contenido };
 
-    estadoTexto.textContent = "Guardando artículo...";
+      if (archivo) {
+        estadoTexto.textContent = "Subiendo imagen...";
+        actualizacion.imagenURL = await subirImagen(archivo);
+      }
 
-    const articulo = {
-      titulo,
-      contenido,
-      estado:    "borrador",
-      fecha:     Timestamp.now(),
-      imagenURL,
-      categoria,
-      uid:       uidActual
-    };
-    if (continente) articulo.continente = continente;
+      estadoTexto.textContent = "Guardando cambios...";
+      await updateDoc(doc(db, "articulos", borradoreId), actualizacion);
 
-    await addDoc(collection(db, "articulos"), articulo);
+      estadoTexto.style.color = "green";
+      estadoTexto.textContent = "Cambios guardados.";
 
-    estadoTexto.style.color = "green";
-    estadoTexto.textContent = "Borrador enviado. El editor lo revisará pronto.";
-    e.target.reset();
-    document.getElementById("vista-previa-contenedor").style.display = "none";
-    document.getElementById("campo-continente").style.display = "none";
-    cargarBorradores();
+    } else {
+      estadoTexto.textContent = "Subiendo imagen...";
+      const imagenURL = await subirImagen(archivo);
+
+      estadoTexto.textContent = "Enviando artículo...";
+      const nuevoDoc = await addDoc(collection(db, "articulos"), {
+        titulo,
+        contenido,
+        estado:    "borrador",
+        fecha:     Timestamp.now(),
+        imagenURL,
+        categoria,
+        uid:       uidActual
+      });
+
+      borradoreId = nuevoDoc.id;
+      modoEdicion = true;
+      activarModo("edicion");
+
+      estadoTexto.style.color = "green";
+      estadoTexto.textContent = "Artículo enviado a revisión.";
+    }
 
   } catch (error) {
     estadoTexto.style.color = "var(--rojo)";
-    estadoTexto.textContent = "Error al enviar. Intenta de nuevo.";
+    estadoTexto.textContent = "Error al guardar. Intenta de nuevo.";
     console.error(error);
   } finally {
     btnEnviar.disabled = false;
   }
 });
-
-// --- CARGAR BORRADORES PROPIOS ---
-async function cargarBorradores() {
-  const lista = document.getElementById("lista-borradores");
-  lista.innerHTML = "<p class='lista-vacia'>Cargando...</p>";
-
-  try {
-    const q = query(
-      collection(db, "articulos"),
-      where("estado", "==", "borrador"),
-      where("uid", "==", uidActual),
-      orderBy("fecha", "desc")
-    );
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      lista.innerHTML = "<p class='lista-vacia'>Aún no has enviado borradores.</p>";
-      return;
-    }
-
-    lista.innerHTML = "";
-    snap.forEach((doc) => {
-      const datos = doc.data();
-      const fecha = datos.fecha?.toDate().toLocaleDateString("es-MX") ?? "—";
-      const extras = [datos.imagen2URL, datos.imagen3URL].filter(Boolean).length;
-      lista.innerHTML += `
-        <div class="articulo-fila">
-          <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
-          <div class="articulo-fila-info">
-            <p class="articulo-fila-titulo">${datos.titulo}</p>
-            <p class="articulo-fila-meta">${datos.categoria} · ${fecha} · ${1 + extras} imagen(es) · <span class="estado-borrador">Borrador</span></p>
-          </div>
-        </div>`;
-    });
-
-  } catch (error) {
-    lista.innerHTML = "<p class='lista-vacia'>Error al cargar borradores.</p>";
-    console.error(error);
-  }
-}

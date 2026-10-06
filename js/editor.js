@@ -1,12 +1,14 @@
-// editor.js — panel del editor
+// editor.js — panel del editor (solo aprobar + gestionar destacados)
 import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { collection, query, where, orderBy,
-         getDocs, getDoc, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { collection, doc, updateDoc, getDocs,
+         getDoc, query, where, orderBy,
+         limit, Timestamp }                      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-// Estado del panel de edición
-let articuloId    = null;
-let articuloDatos = null;
+// Máx. artículos destacados por categoría (FIFO: el más antiguo se retira al superar el límite)
+const MAX_DESTACADOS = 5;
+
+let articuloActual = null; // { id, datos, modo }
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -22,15 +24,14 @@ onAuthStateChanged(auth, async (usuario) => {
     window.location.href = "../escritor/index.html";
     return;
   }
-  if (rol !== "editor") {
+  if (rol !== "editor" && rol !== "admin") {
     window.location.href = "../login.html";
     return;
   }
 
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
   cargarPendientes();
-  cargarPublicados();
-  cargarDestacados("investigacion");
+  cargarPublicados("noticias");
 });
 
 // --- CERRAR SESIÓN ---
@@ -39,309 +40,251 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
   window.location.href = "../login.html";
 });
 
-// ================================================
-// SECCIÓN 1: PENDIENTES
-// ================================================
+// --- CARGAR PENDIENTES (borradores) ---
 async function cargarPendientes() {
   const lista = document.getElementById("lista-pendientes");
   lista.innerHTML = "<p class='lista-vacia'>Cargando...</p>";
 
   try {
-    const q = query(
+    const snap = await getDocs(query(
       collection(db, "articulos"),
       where("estado", "==", "borrador"),
       orderBy("fecha", "desc")
-    );
-    const snap = await getDocs(q);
+    ));
 
     if (snap.empty) {
-      lista.innerHTML = "<p class='lista-vacia'>No hay borradores pendientes.</p>";
+      lista.innerHTML = "<p class='lista-vacia'>Sin borradores pendientes.</p>";
       return;
     }
 
     lista.innerHTML = "";
-    snap.forEach((documento) => {
+    snap.forEach(documento => {
       const datos = documento.data();
       const fecha = datos.fecha?.toDate().toLocaleDateString("es-MX") ?? "—";
-      const fila  = document.createElement("div");
-      fila.className = "articulo-fila articulo-fila-clickable";
-      fila.innerHTML = `
-        <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
-        <div class="articulo-fila-info">
-          <p class="articulo-fila-titulo">${datos.titulo}</p>
-          <p class="articulo-fila-meta">${datos.categoria} · ${fecha}</p>
-        </div>
-        <span class="estado-borrador">Pendiente</span>`;
-      fila.addEventListener("click", () => abrirDetalle(documento.id, datos, "publicar"));
-      lista.appendChild(fila);
+      lista.appendChild(crearFila(documento.id, datos, fecha, "borrador"));
     });
-
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
   }
 }
 
-// ================================================
-// SECCIÓN 2: PUBLICADOS
-// ================================================
-async function cargarPublicados() {
+// --- CARGAR PUBLICADOS (por categoría) ---
+async function cargarPublicados(categoria) {
   const lista = document.getElementById("lista-publicados");
   lista.innerHTML = "<p class='lista-vacia'>Cargando...</p>";
 
   try {
-    const q = query(
+    const snap = await getDocs(query(
       collection(db, "articulos"),
-      where("estado", "==", "publicado"),
-      orderBy("fechaPublicacion", "desc")
-    );
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      lista.innerHTML = "<p class='lista-vacia'>No hay artículos publicados aún.</p>";
-      return;
-    }
-
-    lista.innerHTML = "";
-    snap.forEach((documento) => {
-      const datos = documento.data();
-      const fecha = datos.fechaPublicacion?.toDate().toLocaleDateString("es-MX") ?? "—";
-      const fila  = document.createElement("div");
-      fila.className = "articulo-fila articulo-fila-clickable";
-      fila.innerHTML = `
-        <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
-        <div class="articulo-fila-info">
-          <p class="articulo-fila-titulo">${datos.titulo}</p>
-          <p class="articulo-fila-meta">${datos.categoria} · ${fecha}</p>
-        </div>
-        <span class="estado-publicado">Publicado</span>`;
-      fila.addEventListener("click", () => abrirDetalle(documento.id, datos, "editar"));
-      lista.appendChild(fila);
-    });
-
-  } catch (error) {
-    lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
-    console.error(error);
-  }
-}
-
-// ================================================
-// SECCIÓN 3: DESTACADOS
-// ================================================
-async function cargarDestacados(categoria) {
-  const lista = document.getElementById("lista-destacados");
-  lista.innerHTML = "<p class='lista-vacia'>Cargando...</p>";
-
-  try {
-    const q = query(
-      collection(db, "articulos"),
-      where("estado", "==", "publicado"),
+      where("estado",    "==", "publicado"),
       where("categoria", "==", categoria),
       orderBy("fechaPublicacion", "desc")
-    );
-    const snap = await getDocs(q);
+    ));
 
     if (snap.empty) {
-      lista.innerHTML = "<p class='lista-vacia'>No hay artículos publicados en esta categoría.</p>";
+      lista.innerHTML = "<p class='lista-vacia'>Sin artículos publicados en esta categoría.</p>";
       return;
     }
 
     lista.innerHTML = "";
-    snap.forEach((documento) => {
-      const datos     = documento.data();
-      const destacado = datos.destacado === true;
-      const fila      = document.createElement("div");
-      fila.className  = "articulo-fila";
-      fila.innerHTML  = `
-        <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
-        <div class="articulo-fila-info">
-          <p class="articulo-fila-titulo">${datos.titulo}</p>
-          <p class="articulo-fila-meta">${datos.categoria}</p>
-        </div>
-        <button class="btn-destacado ${destacado ? 'btn-destacado-activo' : ''}"
-                data-id="${documento.id}"
-                data-destacado="${destacado}">
-          ${destacado ? "★ Destacado" : "☆ Destacar"}
-        </button>`;
-
-      fila.querySelector(".btn-destacado").addEventListener("click", (e) => {
-        toggleDestacado(documento.id, destacado, e.currentTarget);
-      });
-
-      lista.appendChild(fila);
+    snap.forEach(documento => {
+      const datos = documento.data();
+      const fecha = datos.fechaPublicacion?.toDate().toLocaleDateString("es-MX") ?? "—";
+      lista.appendChild(crearFila(documento.id, datos, fecha, "publicado"));
     });
-
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
   }
 }
 
-// Toggle destacado sin abrir el panel de edición
-async function toggleDestacado(id, estadoActual, btn) {
-  btn.disabled = true;
-  const nuevoEstado = !estadoActual;
+// --- CREAR FILA DE ARTÍCULO ---
+function crearFila(id, datos, fecha, modo) {
+  const fila = document.createElement("div");
+  fila.className = "articulo-fila articulo-fila-clickable";
+
+  const badgeEstado = modo === "borrador"
+    ? `<span class="estado-borrador">Pendiente</span>`
+    : `<span class="estado-publicado">Publicado</span>`;
+
+  const btnDestHTML = modo === "publicado" ? `
+    <button class="btn-destacado ${datos.destacado ? "btn-destacado-activo" : ""}" data-id="${id}">
+      ${datos.destacado ? "★ Destacado" : "☆ Destacar"}
+    </button>` : "";
+
+  fila.innerHTML = `
+    <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
+    <div class="articulo-fila-info">
+      <p class="articulo-fila-titulo">${datos.titulo}</p>
+      <p class="articulo-fila-meta">${datos.categoria} · ${fecha}</p>
+    </div>
+    ${badgeEstado}
+    ${btnDestHTML}`;
+
+  fila.addEventListener("click", (e) => {
+    if (e.target.closest(".btn-destacado")) return;
+    abrirVista(id, datos, modo);
+  });
+
+  const btnDest = fila.querySelector(".btn-destacado");
+  if (btnDest) {
+    btnDest.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      btnDest.disabled = true;
+      await toggleDestacadoConLimite(id, datos);
+      // Recargar lista para reflejar cambios (incluyendo artículo desplazado por FIFO)
+      const tabActivo = document.querySelector("#tabs-publicados .tab.activo");
+      await cargarPublicados(tabActivo ? tabActivo.dataset.cat : "noticias");
+    });
+  }
+
+  return fila;
+}
+
+// --- ABRIR VISTA DE ARTÍCULO (render igual a articulo.html) ---
+function abrirVista(id, datos, modo) {
+  articuloActual = { id, datos, modo };
+
+  const parrafos = (datos.contenido || "").split("\n\n");
+  const mitad    = Math.ceil(parrafos.length / 2);
+  const parte1   = parrafos.slice(0, mitad).join("\n\n");
+  const parte2   = parrafos.slice(mitad).join("\n\n");
+
+  const img2 = datos.imagen2URL
+    ? `<img src="${datos.imagen2URL}" alt="" class="art-imagen-extra">` : "";
+  const img3 = datos.imagen3URL
+    ? `<img src="${datos.imagen3URL}" alt="" class="art-imagen-extra">` : "";
+
+  const fechaTexto = modo === "publicado" && datos.fechaPublicacion
+    ? datos.fechaPublicacion.toDate().toLocaleDateString("es-MX", {
+        year: "numeric", month: "long", day: "numeric"
+      })
+    : "Borrador — sin publicar";
+
+  document.getElementById("vista-articulo").innerHTML = `
+    <p class="art-categoria">${datos.categoria}</p>
+    <h1 class="art-titulo">${datos.titulo}</h1>
+    <p class="art-meta">${fechaTexto}</p>
+    <img src="${datos.imagenURL}" alt="${datos.titulo}" class="art-imagen-principal">
+    <div class="art-contenido">${parte1}</div>
+    ${img2}
+    <div class="art-contenido">${parte2}</div>
+    ${img3}`;
+
+  const btnAprobar  = document.getElementById("btn-aprobar");
+  const btnDestacar = document.getElementById("btn-destacar");
+
+  document.getElementById("vista-estado").textContent = "";
+  btnAprobar.style.display  = modo === "borrador"  ? "inline-block" : "none";
+  btnDestacar.style.display = modo === "publicado" ? "inline-block" : "none";
+  btnAprobar.disabled       = false;
+
+  if (modo === "publicado") {
+    btnDestacar.textContent = datos.destacado ? "★ Quitar destacado" : "☆ Destacar";
+    btnDestacar.className   = `btn-destacado ${datos.destacado ? "btn-destacado-activo" : ""}`;
+  }
+
+  document.getElementById("panel-lista").style.display = "none";
+  document.getElementById("panel-vista").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// --- VOLVER AL PANEL LISTA ---
+document.getElementById("btn-volver").addEventListener("click", () => {
+  document.getElementById("panel-vista").style.display = "none";
+  document.getElementById("panel-lista").style.display = "block";
+  articuloActual = null;
+});
+
+// --- APROBAR ARTÍCULO ---
+document.getElementById("btn-aprobar").addEventListener("click", async () => {
+  if (!articuloActual) return;
+  const { id } = articuloActual;
+  const btn    = document.getElementById("btn-aprobar");
+  const estado = document.getElementById("vista-estado");
+
+  btn.disabled       = true;
+  estado.style.color = "#555";
+  estado.textContent = "Publicando...";
 
   try {
-    await updateDoc(doc(db, "articulos", id), { destacado: nuevoEstado });
-    btn.textContent = nuevoEstado ? "★ Destacado" : "☆ Destacar";
-    btn.dataset.destacado = nuevoEstado;
-    if (nuevoEstado) {
-      btn.classList.add("btn-destacado-activo");
-    } else {
-      btn.classList.remove("btn-destacado-activo");
-    }
+    await updateDoc(doc(db, "articulos", id), {
+      estado:           "publicado",
+      fechaPublicacion: Timestamp.now()
+    });
+
+    estado.style.color = "green";
+    estado.textContent = "¡Artículo publicado!";
+
+    setTimeout(() => {
+      document.getElementById("panel-vista").style.display = "none";
+      document.getElementById("panel-lista").style.display = "block";
+      articuloActual = null;
+      cargarPendientes();
+      const tabActivo = document.querySelector("#tabs-publicados .tab.activo");
+      cargarPublicados(tabActivo ? tabActivo.dataset.cat : "noticias");
+    }, 800);
+
   } catch (error) {
-    console.error("Error al cambiar destacado:", error);
+    estado.style.color = "var(--rojo)";
+    estado.textContent = "Error al publicar. Intenta de nuevo.";
+    btn.disabled = false;
+    console.error(error);
+  }
+});
+
+// --- DESTACAR DESDE EL PANEL VISTA ---
+document.getElementById("btn-destacar").addEventListener("click", async () => {
+  if (!articuloActual || articuloActual.modo !== "publicado") return;
+  const btn = document.getElementById("btn-destacar");
+  btn.disabled = true;
+
+  try {
+    await toggleDestacadoConLimite(articuloActual.id, articuloActual.datos);
+    btn.textContent = articuloActual.datos.destacado ? "★ Quitar destacado" : "☆ Destacar";
+    btn.className   = `btn-destacado ${articuloActual.datos.destacado ? "btn-destacado-activo" : ""}`;
+  } catch (error) {
+    console.error(error);
   } finally {
     btn.disabled = false;
   }
-}
-
-// Tabs de categorías — sección 3
-document.getElementById("tabs-destacados").addEventListener("click", (e) => {
-  const tab = e.target.closest(".tab");
-  if (!tab) return;
-  document.querySelectorAll("#tabs-destacados .tab").forEach(t => t.classList.remove("activo"));
-  tab.classList.add("activo");
-  cargarDestacados(tab.dataset.cat);
 });
 
-// ================================================
-// PANEL COMPARTIDO DE EDICIÓN
-// ================================================
-function abrirDetalle(id, datos, modo) {
-  articuloId    = id;
-  articuloDatos = datos;
-  document.getElementById("detalle-imagen").src           = datos.imagenURL;
-  document.getElementById("editor-titulo").value          = datos.titulo;
-  document.getElementById("editor-contenido").value       = datos.contenido;
-  document.getElementById("detalle-categoria").textContent = datos.categoria;
+// --- TOGGLE DESTACADO CON LÍMITE FIFO POR CATEGORÍA ---
+async function toggleDestacadoConLimite(id, datos) {
+  const nuevoEstado = !datos.destacado;
 
-  if (datos.fuente) {
-    document.getElementById("detalle-fuente").href              = datos.fuente;
-    document.getElementById("detalle-fuente-row").style.display = "block";
+  if (nuevoEstado) {
+    // Buscar destacados existentes de esta categoría, ordenados del más antiguo al más nuevo
+    const snap = await getDocs(query(
+      collection(db, "articulos"),
+      where("estado",         "==", "publicado"),
+      where("categoria",      "==", datos.categoria),
+      where("destacado",      "==", true),
+      orderBy("fechaDestacado", "asc")
+    ));
+
+    if (snap.size >= MAX_DESTACADOS) {
+      await updateDoc(doc(db, "articulos", snap.docs[0].id), { destacado: false });
+    }
+
+    await updateDoc(doc(db, "articulos", id), {
+      destacado:      true,
+      fechaDestacado: Timestamp.now()
+    });
   } else {
-    document.getElementById("detalle-fuente-row").style.display = "none";
+    await updateDoc(doc(db, "articulos", id), { destacado: false });
   }
 
-  document.getElementById("bloque-imagen2").style.display = datos.imagen2URL ? "block" : "none";
-  if (datos.imagen2URL) document.getElementById("detalle-imagen2").src = datos.imagen2URL;
-
-  document.getElementById("bloque-imagen3").style.display = datos.imagen3URL ? "block" : "none";
-  if (datos.imagen3URL) document.getElementById("detalle-imagen3").src = datos.imagen3URL;
-
-  // Mostrar botón correcto según modo
-  const btnPublicar = document.getElementById("btn-publicar");
-  const btnGuardar  = document.getElementById("btn-guardar");
-  if (modo === "publicar") {
-    document.getElementById("detalle-seccion-titulo").textContent = "EDITAR Y PUBLICAR";
-    btnPublicar.style.display = "block";
-    btnGuardar.style.display  = "none";
-  } else {
-    document.getElementById("detalle-seccion-titulo").textContent = "EDITAR ARTÍCULO PUBLICADO";
-    btnPublicar.style.display = "none";
-    btnGuardar.style.display  = "block";
-  }
-
-  document.getElementById("detalle-estado").textContent    = "";
-  document.getElementById("detalle-seccion").style.display = "block";
-  document.getElementById("detalle-seccion").scrollIntoView({ behavior: "smooth" });
+  datos.destacado = nuevoEstado;
 }
 
-// Volver
-document.getElementById("btn-cerrar-detalle").addEventListener("click", () => {
-  document.getElementById("detalle-seccion").style.display = "none";
-  articuloId    = null;
-  articuloDatos = null;
-  modoEdicion   = null;
-});
-
-// Construir objeto de actualización con campos opcionales
-function construirActualizacion(extras = {}) {
-  const titulo    = document.getElementById("editor-titulo").value.trim();
-  const contenido = document.getElementById("editor-contenido").value.trim();
-  const base = {
-    titulo,
-    contenido,
-    estado:    articuloDatos.estado,
-    fecha:     articuloDatos.fecha,
-    imagenURL: articuloDatos.imagenURL,
-    categoria: articuloDatos.categoria,
-    uid:       articuloDatos.uid,
-    ...extras
-  };
-  if (articuloDatos.fuente)           base.fuente           = articuloDatos.fuente;
-  if (articuloDatos.imagen2URL)       base.imagen2URL       = articuloDatos.imagen2URL;
-  if (articuloDatos.imagen3URL)       base.imagen3URL       = articuloDatos.imagen3URL;
-  if (articuloDatos.fechaPublicacion) base.fechaPublicacion = articuloDatos.fechaPublicacion;
-  if (articuloDatos.destacado !== undefined) base.destacado = articuloDatos.destacado;
-  return { titulo, contenido, base };
-}
-
-// PUBLICAR (borrador → publicado)
-document.getElementById("btn-publicar").addEventListener("click", async () => {
-  if (!articuloId) return;
-  const estadoTexto = document.getElementById("detalle-estado");
-  const btn         = document.getElementById("btn-publicar");
-
-  const { titulo, contenido, base } = construirActualizacion({ fechaPublicacion: Timestamp.now() });
-  if (!titulo || !contenido) {
-    estadoTexto.style.color = "var(--rojo)";
-    estadoTexto.textContent = "El título y el contenido no pueden estar vacíos.";
-    return;
-  }
-
-  btn.disabled            = true;
-  estadoTexto.style.color = "#555";
-  estadoTexto.textContent = "Publicando...";
-
-  try {
-    await updateDoc(doc(db, "articulos", articuloId), { ...base, estado: "publicado" });
-    estadoTexto.style.color = "green";
-    estadoTexto.textContent = "Artículo publicado.";
-    setTimeout(() => {
-      document.getElementById("detalle-seccion").style.display = "none";
-      cargarPendientes();
-      cargarPublicados();
-    }, 1200);
-  } catch (error) {
-    estadoTexto.style.color = "var(--rojo)";
-    estadoTexto.textContent = "Error al publicar. Intenta de nuevo.";
-    btn.disabled = false;
-    console.error(error);
-  }
-});
-
-// GUARDAR CAMBIOS (publicado → publicado)
-document.getElementById("btn-guardar").addEventListener("click", async () => {
-  if (!articuloId) return;
-  const estadoTexto = document.getElementById("detalle-estado");
-  const btn         = document.getElementById("btn-guardar");
-
-  const { titulo, contenido, base } = construirActualizacion();
-  if (!titulo || !contenido) {
-    estadoTexto.style.color = "var(--rojo)";
-    estadoTexto.textContent = "El título y el contenido no pueden estar vacíos.";
-    return;
-  }
-
-  btn.disabled            = true;
-  estadoTexto.style.color = "#555";
-  estadoTexto.textContent = "Guardando...";
-
-  try {
-    await updateDoc(doc(db, "articulos", articuloId), base);
-    estadoTexto.style.color = "green";
-    estadoTexto.textContent = "Cambios guardados.";
-    setTimeout(() => {
-      document.getElementById("detalle-seccion").style.display = "none";
-      cargarPublicados();
-    }, 1200);
-  } catch (error) {
-    estadoTexto.style.color = "var(--rojo)";
-    estadoTexto.textContent = "Error al guardar. Intenta de nuevo.";
-    btn.disabled = false;
-    console.error(error);
-  }
+// --- TABS DE PUBLICADOS ---
+document.querySelectorAll("#tabs-publicados .tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll("#tabs-publicados .tab").forEach(t => t.classList.remove("activo"));
+    tab.classList.add("activo");
+    cargarPublicados(tab.dataset.cat);
+  });
 });

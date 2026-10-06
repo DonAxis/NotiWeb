@@ -446,6 +446,136 @@ a {
 }
 
 /* =====================
+   EXPLORAR — TABS
+   ===================== */
+.explorar-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--gris-borde);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.explorar-tab {
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #888;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.explorar-tab:hover { color: var(--rojo); }
+
+.explorar-tab.activo {
+  color: var(--rojo);
+  border-bottom-color: var(--rojo);
+}
+
+/* =====================
+   EXPLORAR — PANELES (fade)
+   ===================== */
+.explorar-panel {
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.explorar-panel-oculto {
+  display: none;
+  opacity: 0;
+}
+
+/* =====================
+   EXPLORAR — BOTONES SUBCATEGORÍA
+   ===================== */
+.subcats-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 20px;
+}
+
+.subcat-btn {
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 11px 22px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.subcat-btn:hover {
+  background: rgba(106, 33, 53, 0.75);
+  border-color: var(--rojo);
+}
+
+.subcat-btn.activo {
+  background: rgba(106, 33, 53, 0.9);
+  border-color: var(--rojo);
+}
+
+/* =====================
+   EXPLORAR — OCIO (4 zonas)
+   ===================== */
+.ocio-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.ocio-zona {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 18px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.ocio-zona:last-child { border-right: none; }
+
+.ocio-zona:hover { background: rgba(255, 255, 255, 0.1); }
+
+.ocio-zona.activo { background: rgba(106, 33, 53, 0.45); }
+
+.ocio-zona-label {
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.ocio-zona.activo .ocio-zona-label {
+  border-color: var(--rojo);
+}
+
+/* =====================
    PIE DE PÁGINA
    ===================== */
 .pie {

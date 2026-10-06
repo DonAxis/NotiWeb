@@ -137,24 +137,42 @@ tabs.forEach(tab => {
   });
 });
 
-// --- SECCIÓN MUNDO: cargar artículos por continente ---
-async function cargarArticulosMundo(continente) {
-  const contenedor = document.getElementById("mundo-articulos");
+// --- EXPLORAR: panel compartido de resultados ---
+const explorarResultados = document.getElementById("explorar-resultados");
+const explorarTitulo     = document.getElementById("explorar-titulo");
+let elementoActivo = null;
+let panelActivo    = "mundo";
+
+function limpiarActivo() {
+  if (elementoActivo) { elementoActivo.classList.remove("activo"); elementoActivo = null; }
+}
+
+function cerrarResultados() {
+  explorarResultados.style.display = "none";
+  limpiarActivo();
+}
+
+document.getElementById("explorar-cerrar").addEventListener("click", cerrarResultados);
+
+// --- CARGAR ARTÍCULOS (genérico) ---
+async function cargarArticulosExplorar(filtros, nombre) {
+  const contenedor = document.getElementById("explorar-articulos");
+  explorarTitulo.textContent = nombre.toUpperCase();
+  explorarResultados.style.display = "block";
   contenedor.innerHTML = "<p class='mundo-vacio'>Cargando...</p>";
+  explorarResultados.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
   try {
-    const q = query(
-      collection(db, "articulos"),
-      where("estado",     "==", "publicado"),
-      where("categoria",  "==", "mundo"),
-      where("continente", "==", continente),
+    const condiciones = [
+      where("estado", "==", "publicado"),
+      ...Object.entries(filtros).map(([campo, valor]) => where(campo, "==", valor)),
       orderBy("fechaPublicacion", "desc"),
       limit(9)
-    );
-    const snap = await getDocs(q);
+    ];
+    const snap = await getDocs(query(collection(db, "articulos"), ...condiciones));
 
     if (snap.empty) {
-      contenedor.innerHTML = "<p class='mundo-vacio'>Sin artículos en este continente por ahora.</p>";
+      contenedor.innerHTML = "<p class='mundo-vacio'>Sin artículos aquí por ahora.</p>";
       return;
     }
 
@@ -170,50 +188,82 @@ async function cargarArticulosMundo(continente) {
       });
       contenedor.appendChild(tarjeta);
     });
-
   } catch (error) {
     contenedor.innerHTML = "<p class='mundo-vacio'>Error al cargar artículos.</p>";
     console.error(error);
   }
 }
 
-// --- MAPA MUNDIAL: eventos de continentes ---
-const continentes = document.querySelectorAll(".continente");
-const panelMundo  = document.getElementById("mundo-panel");
-const tituloCont  = document.getElementById("mundo-titulo-continente");
-let continenteActivo = null;
-
-continentes.forEach(g => {
+// --- MAPA MUNDIAL: continentes ---
+document.querySelectorAll(".continente").forEach(g => {
   const activar = () => {
-    const valor  = g.dataset.continente;
-    const nombre = g.dataset.nombre;
-
-    if (continenteActivo) continenteActivo.classList.remove("activo");
-
-    if (continenteActivo === g) {
-      // segundo clic: cerrar panel
-      panelMundo.style.display = "none";
-      continenteActivo = null;
-      return;
-    }
-
+    if (elementoActivo === g) { cerrarResultados(); return; }
+    limpiarActivo();
     g.classList.add("activo");
-    continenteActivo = g;
-    tituloCont.textContent = nombre;
-    panelMundo.style.display = "block";
-    cargarArticulosMundo(valor);
-    panelMundo.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    elementoActivo = g;
+    cargarArticulosExplorar(
+      { categoria: "mundo", continente: g.dataset.continente },
+      g.dataset.nombre
+    );
   };
-
   g.addEventListener("click", activar);
   g.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activar(); }
   });
 });
 
-document.getElementById("mundo-cerrar").addEventListener("click", () => {
-  panelMundo.style.display = "none";
-  if (continenteActivo) { continenteActivo.classList.remove("activo"); continenteActivo = null; }
+// --- SUBCATEGORÍAS (informática, gastronomía) ---
+document.querySelectorAll(".subcat-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (elementoActivo === btn) { cerrarResultados(); return; }
+    limpiarActivo();
+    btn.classList.add("activo");
+    elementoActivo = btn;
+    cargarArticulosExplorar(
+      { categoria: btn.dataset.cat, subcategoria: btn.dataset.sub },
+      btn.textContent.trim()
+    );
+  });
+});
+
+// --- OCIO: zonas ---
+document.querySelectorAll(".ocio-zona").forEach(zona => {
+  zona.addEventListener("click", () => {
+    if (elementoActivo === zona) { cerrarResultados(); return; }
+    limpiarActivo();
+    zona.classList.add("activo");
+    elementoActivo = zona;
+    cargarArticulosExplorar(
+      { categoria: zona.dataset.cat, subcategoria: zona.dataset.sub },
+      zona.querySelector(".ocio-zona-label").textContent
+    );
+  });
+});
+
+// --- TABS EXPLORAR: cambio con fade ---
+document.querySelectorAll(".explorar-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    const nuevo = tab.dataset.panel;
+    if (nuevo === panelActivo) return;
+
+    cerrarResultados();
+
+    const saliente = document.getElementById(`panel-${panelActivo}`);
+    saliente.style.opacity = "0";
+
+    setTimeout(() => {
+      saliente.classList.add("explorar-panel-oculto");
+      const entrante = document.getElementById(`panel-${nuevo}`);
+      entrante.classList.remove("explorar-panel-oculto");
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        entrante.style.opacity = "1";
+      }));
+      panelActivo = nuevo;
+    }, 250);
+
+    document.querySelectorAll(".explorar-tab").forEach(t => t.classList.remove("activo"));
+    tab.classList.add("activo");
+  });
 });
 
 // --- INICIALIZAR ---
