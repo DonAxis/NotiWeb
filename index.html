@@ -91,11 +91,15 @@
         <img class="mapa-imagen" src="img/mapa.png" alt="Mapa mundial">
 
         <!-- Capa SVG: paths transparentes alineados sobre la imagen -->
-        <svg class="mapa-overlay" viewBox="0 -30 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
+        <svg class="mapa-overlay" viewBox="0 -55 1000 500" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
 
           <!-- América -->
           <g class="continente" data-continente="america" data-nombre="América" tabindex="0" role="button">
-            <path d="M 33,67 L 47,56 L 108,56 L 250,44 L 300,56 L 353,119 L 286,153 L 278,181 L 258,167 L 244,206 L 194,183 L 153,144 L 153,114 L 125,89 L 89,86 L 47,97 Z"/>
+            <!-- América del Norte (incluye México) -->
+            <path d="M 33,67 L 47,56 L 108,56 L 250,44 L 300,56 L 353,119 L 310,155 L 295,185 L 278,205 L 260,222 L 248,225 L 194,183 L 153,144 L 153,114 L 125,89 L 89,86 L 47,97 Z"/>
+            <!-- Conector istmo -->
+            <path d="M 248,222 L 295,219 L 294,219 L 260,222 Z"/>
+            <!-- América del Sur -->
             <path d="M 294,219 L 330,219 L 356,233 L 403,264 L 394,283 L 381,314 L 361,342 L 353,356 L 317,403 L 294,392 L 305,300 L 286,256 L 283,244 Z"/>
             <text x="210" y="230" text-anchor="middle">América</text>
           </g>
