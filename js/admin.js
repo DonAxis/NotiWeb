@@ -1,16 +1,9 @@
 // admin.js — panel del administrador
-import { auth, db, firebaseConfig }              from "./firebase.js";
+import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { initializeApp }                         from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword,
-         signOut as signOutSecundario }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, doc, setDoc, updateDoc,
          getDocs, deleteDoc, getDoc,
          query, where }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-
-// App secundaria para crear usuarios sin cerrar la sesión del admin
-const appSecundaria  = initializeApp(firebaseConfig, "secundaria");
-const authSecundaria = getAuth(appSecundaria);
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -36,52 +29,6 @@ onAuthStateChanged(auth, async (usuario) => {
 document.getElementById("btn-salir").addEventListener("click", async () => {
   await signOut(auth);
   window.location.href = "login.html";
-});
-
-// --- REGISTRAR USUARIO ---
-document.getElementById("form-registro").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const btnRegistrar = document.getElementById("btn-registrar");
-  const estadoTexto  = document.getElementById("form-estado");
-
-  const nombre    = document.getElementById("nombre").value.trim();
-  const correo    = document.getElementById("correo").value.trim();
-  const contrasena = document.getElementById("contrasena").value;
-  const rol       = document.getElementById("rol").value;
-
-  btnRegistrar.disabled    = true;
-  estadoTexto.style.color  = "#555";
-  estadoTexto.textContent  = "Creando usuario...";
-
-  try {
-    // Crear en Firebase Auth usando la app secundaria (no afecta la sesión del admin)
-    const resultado = await createUserWithEmailAndPassword(authSecundaria, correo, contrasena);
-    const nuevoUid  = resultado.user.uid;
-
-    // Cerrar sesión en la app secundaria inmediatamente
-    await signOutSecundario(authSecundaria);
-
-    // Guardar en Firestore
-    await setDoc(doc(db, "usuarios", nuevoUid), { nombre, correo, rol });
-
-    estadoTexto.style.color = "green";
-    estadoTexto.textContent = `Usuario "${nombre}" registrado como ${rol}.`;
-    e.target.reset();
-    cargarUsuarios();
-
-  } catch (error) {
-    const codigos = {
-      "auth/email-already-in-use": "Ese correo ya está registrado.",
-      "auth/invalid-email":        "El correo no es válido.",
-      "auth/weak-password":        "La contraseña debe tener al menos 6 caracteres.",
-    };
-    estadoTexto.style.color = "var(--rojo)";
-    estadoTexto.textContent = codigos[error.code] ?? "Error al crear usuario.";
-    console.error(error);
-  } finally {
-    btnRegistrar.disabled = false;
-  }
 });
 
 // --- SOLICITUDES PENDIENTES ---
