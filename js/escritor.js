@@ -15,8 +15,47 @@ import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.c
 const LIMITE_BYTES = 5 * 1024 * 1024; // 5 MB
 const MIN_W = 600, MIN_H = 400;
 
+const SUBCATEGORIAS = {
+  informatica: ["hardware", "software", "redes", "ia", "ciberseguridad"],
+  gastronomia: ["recetas", "cultura", "restaurantes", "tendencias"],
+  ocio:        ["cine", "musica", "videojuegos", "libros"],
+};
+
 let uidActual         = null;
 let articuloEnEdicion = null; // null = nuevo · { id, datos, estado } = edición
+
+// --- LÓGICA DE SUBCATEGORÍA / CONTINENTE ---
+function actualizarCamposSecundarios(categoria, valorSub = "", valorCont = "") {
+  const campoCont = document.getElementById("campo-continente");
+  const campoSub  = document.getElementById("campo-subcategoria");
+  const selSub    = document.getElementById("subcategoria");
+  const selCont   = document.getElementById("continente");
+
+  if (categoria === "mundo") {
+    campoCont.style.display = "block";
+    campoSub.style.display  = "none";
+    selCont.required = true;
+    selSub.required  = false;
+    selCont.value = valorCont;
+  } else if (SUBCATEGORIAS[categoria]) {
+    campoCont.style.display = "none";
+    campoSub.style.display  = "block";
+    selCont.required = false;
+    selSub.required  = true;
+    selSub.innerHTML = `<option value="">Selecciona una subcategoría</option>` +
+      SUBCATEGORIAS[categoria].map(s => `<option value="${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join("");
+    selSub.value = valorSub;
+  } else {
+    campoCont.style.display = "none";
+    campoSub.style.display  = "none";
+    selCont.required = false;
+    selSub.required  = false;
+  }
+}
+
+document.getElementById("categoria").addEventListener("change", (e) => {
+  actualizarCamposSecundarios(e.target.value);
+});
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -155,6 +194,7 @@ function abrirFormEdicion(id, datos) {
   document.getElementById("categoria").value = datos.categoria || "";
   document.getElementById("contenido").value = datos.contenido || "";
   document.getElementById("error-imagen").style.display = "none";
+  actualizarCamposSecundarios(datos.categoria || "", datos.subcategoria || "", datos.continente || "");
 
   if (datos.imagenURL) {
     document.getElementById("vista-previa").src                      = datos.imagenURL;
@@ -187,6 +227,7 @@ document.getElementById("btn-nuevo-articulo").addEventListener("click", () => {
   document.getElementById("aviso-rechazo").style.display           = "none";
   document.getElementById("aviso-revision").style.display          = "none";
   document.getElementById("error-imagen").style.display            = "none";
+  actualizarCamposSecundarios("");
   document.getElementById("titulo-form").textContent               = "NUEVO ARTÍCULO";
   document.getElementById("btn-enviar").textContent                = "Enviar a revisión";
   document.getElementById("form-estado").textContent               = "";
@@ -269,10 +310,12 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
   const estadoTexto = document.getElementById("form-estado");
   const errImagen   = document.getElementById("error-imagen");
 
-  const titulo    = document.getElementById("titulo").value.trim();
-  const categoria = document.getElementById("categoria").value;
-  const contenido = document.getElementById("contenido").value.trim();
-  const archivo   = document.getElementById("imagen").files[0];
+  const titulo       = document.getElementById("titulo").value.trim();
+  const categoria    = document.getElementById("categoria").value;
+  const subcategoria = document.getElementById("subcategoria").value || null;
+  const continente   = document.getElementById("continente").value   || null;
+  const contenido    = document.getElementById("contenido").value.trim();
+  const archivo      = document.getElementById("imagen").files[0];
 
   // Imagen obligatoria en modo creación
   if (!articuloEnEdicion && !archivo) {
@@ -309,11 +352,13 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
       await addDoc(collection(db, "articulos"), {
         titulo,
         contenido,
-        estado:    "borrador",
-        fecha:     Timestamp.now(),
+        estado:      "borrador",
+        fecha:       Timestamp.now(),
         imagenURL,
         categoria,
-        uid:       uidActual
+        subcategoria,
+        continente,
+        uid:         uidActual
       });
 
       estadoTexto.style.color = "green";
@@ -325,6 +370,8 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
       const actualizacion = {
         titulo,
         categoria,
+        subcategoria,
+        continente,
         contenido,
         estado: "borrador",
         ...(archivo ? { imagenURL } : {})
