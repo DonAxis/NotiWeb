@@ -12,7 +12,8 @@ import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.c
 //   allow read:  if true;
 // }
 
-const LIMITE_BYTES = 5 * 1024 * 1024; // 5 MB
+const LIMITE_PORTADA = 1 * 1024 * 1024; // 1 MB
+const LIMITE_DOC     = 2 * 1024 * 1024; // 2 MB
 const MIN_W = 600, MIN_H = 400;
 
 const SUBCATEGORIAS = {
@@ -203,6 +204,13 @@ function abrirFormEdicion(id, datos) {
     document.getElementById("vista-previa-contenedor").style.display = "none";
   }
 
+  if (datos.imagen2URL) {
+    document.getElementById("vista-previa2").src                      = datos.imagen2URL;
+    document.getElementById("vista-previa2-contenedor").style.display = "block";
+  } else {
+    document.getElementById("vista-previa2-contenedor").style.display = "none";
+  }
+
   const esRechazado = datos.estado === "rechazado";
   document.getElementById("aviso-rechazo").style.display  = esRechazado ? "block" : "none";
   document.getElementById("aviso-revision").style.display = esRechazado ? "none"  : "block";
@@ -223,10 +231,12 @@ document.getElementById("btn-nuevo-articulo").addEventListener("click", () => {
   articuloEnEdicion = null;
 
   document.getElementById("form-articulo").reset();
-  document.getElementById("vista-previa-contenedor").style.display = "none";
-  document.getElementById("aviso-rechazo").style.display           = "none";
-  document.getElementById("aviso-revision").style.display          = "none";
-  document.getElementById("error-imagen").style.display            = "none";
+  document.getElementById("vista-previa-contenedor").style.display  = "none";
+  document.getElementById("vista-previa2-contenedor").style.display = "none";
+  document.getElementById("aviso-rechazo").style.display            = "none";
+  document.getElementById("aviso-revision").style.display           = "none";
+  document.getElementById("error-imagen").style.display             = "none";
+  document.getElementById("error-imagen2").style.display            = "none";
   actualizarCamposSecundarios("");
   document.getElementById("titulo-form").textContent               = "NUEVO ARTÍCULO";
   document.getElementById("btn-enviar").textContent                = "Enviar a revisión";
@@ -248,14 +258,17 @@ document.getElementById("btn-cancelar-form").addEventListener("click", () => {
   articuloEnEdicion = null;
 });
 
-// --- VALIDACIÓN DE IMAGEN (formato + tamaño + dimensiones) ---
-async function validarImagen(archivo) {
+// --- VALIDACIÓN DE IMAGEN ---
+// limite: en bytes · checkDims: true solo para portada
+async function validarImagen(archivo, limite, checkDims = false) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
     return "Solo se admiten imágenes JPG, PNG o WebP.";
   }
-  if (archivo.size > LIMITE_BYTES) {
-    return "La imagen no puede superar 5 MB.";
+  const mb = (limite / 1024 / 1024).toFixed(0);
+  if (archivo.size > limite) {
+    return `La imagen no puede superar ${mb} MB. Puedes comprimirla en squoosh.app`;
   }
+  if (!checkDims) return null;
   return new Promise((resolve) => {
     const url = URL.createObjectURL(archivo);
     const img = new Image();
@@ -273,26 +286,34 @@ async function validarImagen(archivo) {
 }
 
 // --- VISTA PREVIA CON VALIDACIÓN ---
-document.getElementById("imagen").addEventListener("change", async (e) => {
-  const archivo  = e.target.files[0];
-  const errEl    = document.getElementById("error-imagen");
-  const previaCont = document.getElementById("vista-previa-contenedor");
+async function manejarCambioImagen(e, limite, checkDims, idError, idPrevia, idPreviaCont) {
+  const archivo    = e.target.files[0];
+  const errEl      = document.getElementById(idError);
+  const previaCont = document.getElementById(idPreviaCont);
 
   errEl.style.display = "none";
   if (!archivo) return;
 
-  const error = await validarImagen(archivo);
+  const error = await validarImagen(archivo, limite, checkDims);
   if (error) {
-    errEl.textContent   = error;
-    errEl.style.display = "block";
-    e.target.value      = "";
+    errEl.textContent        = error;
+    errEl.style.display      = "block";
+    e.target.value           = "";
     previaCont.style.display = "none";
     return;
   }
 
-  document.getElementById("vista-previa").src = URL.createObjectURL(archivo);
+  document.getElementById(idPrevia).src = URL.createObjectURL(archivo);
   previaCont.style.display = "block";
-});
+}
+
+document.getElementById("imagen").addEventListener("change", (e) =>
+  manejarCambioImagen(e, LIMITE_PORTADA, true, "error-imagen", "vista-previa", "vista-previa-contenedor")
+);
+
+document.getElementById("imagen2").addEventListener("change", (e) =>
+  manejarCambioImagen(e, LIMITE_DOC, false, "error-imagen2", "vista-previa2", "vista-previa2-contenedor")
+);
 
 // --- SUBIR IMAGEN A FIREBASE STORAGE ---
 async function subirImagen(archivo) {
@@ -316,17 +337,19 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
   const continente   = document.getElementById("continente").value   || null;
   const contenido    = document.getElementById("contenido").value.trim();
   const archivo      = document.getElementById("imagen").files[0];
+  const archivo2     = document.getElementById("imagen2").files[0];
+  const errImagen2   = document.getElementById("error-imagen2");
 
-  // Imagen obligatoria en modo creación
+  // Portada obligatoria en modo creación
   if (!articuloEnEdicion && !archivo) {
-    errImagen.textContent   = "La imagen principal es obligatoria.";
+    errImagen.textContent   = "La imagen de portada es obligatoria.";
     errImagen.style.display = "block";
     return;
   }
 
-  // Validar imagen nueva si existe
+  // Validar portada nueva si existe
   if (archivo) {
-    const error = await validarImagen(archivo);
+    const error = await validarImagen(archivo, LIMITE_PORTADA, true);
     if (error) {
       errImagen.textContent   = error;
       errImagen.style.display = "block";
@@ -335,15 +358,31 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
     errImagen.style.display = "none";
   }
 
+  // Validar imagen del artículo si existe
+  if (archivo2) {
+    const error = await validarImagen(archivo2, LIMITE_DOC, false);
+    if (error) {
+      errImagen2.textContent   = error;
+      errImagen2.style.display = "block";
+      return;
+    }
+    errImagen2.style.display = "none";
+  }
+
   btnEnviar.disabled      = true;
   estadoTexto.style.color = "#555";
 
   try {
-    let imagenURL = articuloEnEdicion?.datos?.imagenURL ?? null;
+    let imagenURL  = articuloEnEdicion?.datos?.imagenURL  ?? null;
+    let imagen2URL = articuloEnEdicion?.datos?.imagen2URL ?? null;
 
     if (archivo) {
-      estadoTexto.textContent = "Subiendo imagen...";
+      estadoTexto.textContent = "Subiendo portada...";
       imagenURL = await subirImagen(archivo);
+    }
+    if (archivo2) {
+      estadoTexto.textContent = "Subiendo imagen del artículo...";
+      imagen2URL = await subirImagen(archivo2);
     }
 
     if (!articuloEnEdicion) {
@@ -355,6 +394,7 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
         estado:      "borrador",
         fecha:       Timestamp.now(),
         imagenURL,
+        imagen2URL,
         categoria,
         subcategoria,
         continente,
@@ -374,7 +414,8 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
         continente,
         contenido,
         estado: "borrador",
-        ...(archivo ? { imagenURL } : {})
+        ...(archivo  ? { imagenURL }  : {}),
+        ...(archivo2 ? { imagen2URL } : {})
       };
 
       if (esRechazado) {
