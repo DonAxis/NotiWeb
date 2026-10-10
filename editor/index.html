@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="../css/estilos.css">
   <link rel="stylesheet" href="../css/panel.css">
   <style>
-    /* Render de artículo igual a articulo.html */
     .art-categoria {
       font-size: 0.75rem;
       font-weight: 800;
@@ -45,6 +44,17 @@
       object-fit: cover;
       margin: 28px 0;
     }
+    .aviso-rechazo-vista {
+      background: #fff8f8;
+      border-left: 3px solid #b71c1c;
+      padding: 12px 16px;
+      border-radius: 2px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: #b71c1c;
+    }
+    .aviso-rechazo-vista strong { display: block; margin-bottom: 4px; }
+    .aviso-rechazo-vista span   { color: #333; }
   </style>
 </head>
 <body>
@@ -65,8 +75,15 @@
     <div id="panel-lista">
 
       <section class="seccion">
-        <h2 class="seccion-titulo">PENDIENTES</h2>
+        <h2 class="seccion-titulo">PENDIENTES DE REVISIÓN</h2>
         <div id="lista-pendientes" class="lista-articulos">
+          <p class="lista-vacia">Cargando...</p>
+        </div>
+      </section>
+
+      <section class="seccion">
+        <h2 class="seccion-titulo">ACEPTADOS SIN PUBLICAR</h2>
+        <div id="lista-aceptados" class="lista-articulos">
           <p class="lista-vacia">Cargando...</p>
         </div>
       </section>
@@ -85,6 +102,13 @@
         </div>
       </section>
 
+      <section class="seccion">
+        <h2 class="seccion-titulo">RECHAZADOS</h2>
+        <div id="lista-rechazados" class="lista-articulos">
+          <p class="lista-vacia">Cargando...</p>
+        </div>
+      </section>
+
     </div>
 
     <!-- PANEL VISTA — oculto hasta seleccionar artículo -->
@@ -92,9 +116,21 @@
 
       <div class="detalle-acciones" style="margin-bottom:16px;">
         <button class="btn-secundario" id="btn-volver">← Volver</button>
-        <button class="btn-primario"  id="btn-aprobar"  style="display:none;">Aprobar</button>
-        <button class="btn-destacado" id="btn-destacar" style="display:none;">☆ Destacar</button>
+        <button class="btn-primario"   id="btn-aceptar"  style="display:none;">Aceptar</button>
+        <button class="btn-primario"   id="btn-publicar" style="display:none;">Publicar ahora</button>
+        <button class="btn-secundario" id="btn-rechazar" style="display:none;">Rechazar…</button>
+        <button class="btn-destacado"  id="btn-destacar" style="display:none;">☆ Destacar</button>
         <p class="form-estado" id="vista-estado"></p>
+      </div>
+
+      <!-- Zona de rechazo (toggle) -->
+      <div id="zona-rechazo" class="zona-rechazo" style="display:none;">
+        <p style="font-size:0.82rem; font-weight:700; color:#444; margin-bottom:0;">MOTIVO DEL RECHAZO</p>
+        <textarea id="motivo-rechazo" rows="3" placeholder="Explica al escritor qué debe corregir o mejorar..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="btn-primario btn-peligro" id="btn-confirmar-rechazo">Confirmar rechazo</button>
+          <button class="btn-secundario"            id="btn-cancelar-rechazo">Cancelar</button>
+        </div>
       </div>
 
       <div class="detalle-contenedor" id="vista-articulo"></div>

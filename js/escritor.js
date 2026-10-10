@@ -1,16 +1,22 @@
-// escritor.js — panel del escritor (un artículo a la vez)
-import { auth, db }                              from "./firebase.js";
-import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+// escritor.js — panel del escritor (múltiples estados, Firebase Storage)
+import { auth, db, storage }                         from "./firebase.js";
+import { onAuthStateChanged, signOut }               from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, addDoc, updateDoc, query,
-         where, limit, getDocs, getDoc,
-         doc, Timestamp }                        from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         where, getDocs, getDoc,
+         doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
-const CLOUDINARY_URL    = "https://api.cloudinary.com/v1_1/diaki2vi2/image/upload";
-const CLOUDINARY_PRESET = "VIGÍA CIENTÍFICO";
+// Reglas de Firebase Storage requeridas en la consola:
+// match /articulos/{uid}/{allPaths=**} {
+//   allow write: if request.auth != null && request.auth.uid == uid;
+//   allow read:  if true;
+// }
 
-let uidActual   = null;
-let borradoreId = null;
-let modoEdicion = false;
+const LIMITE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MIN_W = 600, MIN_H = 400;
+
+let uidActual         = null;
+let articuloEnEdicion = null; // null = nuevo · { id, datos, estado } = edición
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -33,7 +39,7 @@ onAuthStateChanged(auth, async (usuario) => {
 
   uidActual = usuario.uid;
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
-  await verificarBorrador();
+  cargarArticulos();
 });
 
 // --- CERRAR SESIÓN ---
@@ -42,68 +48,217 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
   window.location.href = "../login.html";
 });
 
-// --- VERIFICAR BORRADOR EXISTENTE ---
-// Si existe un borrador propio, precarga el formulario y activa modo edición.
-// Si no hay ninguno, muestra el formulario vacío en modo creación.
-async function verificarBorrador() {
+// --- CARGAR TODOS LOS ARTÍCULOS DEL ESCRITOR ---
+async function cargarArticulos() {
   try {
-    const q    = query(
+    const snap = await getDocs(query(
       collection(db, "articulos"),
-      where("estado", "==", "borrador"),
-      where("uid",    "==", uidActual),
-      limit(1)
-    );
-    const snap = await getDocs(q);
+      where("uid", "==", uidActual)
+    ));
 
-    if (!snap.empty) {
-      const documento = snap.docs[0];
-      const datos     = documento.data();
-      borradoreId     = documento.id;
-      modoEdicion     = true;
+    const rechazados = [];
+    const borradores = [];
+    const historial  = [];
 
-      document.getElementById("titulo").value    = datos.titulo    || "";
-      document.getElementById("categoria").value = datos.categoria || "";
-      document.getElementById("contenido").value = datos.contenido || "";
-
-      if (datos.imagenURL) {
-        document.getElementById("vista-previa").src                      = datos.imagenURL;
-        document.getElementById("vista-previa-contenedor").style.display = "block";
+    snap.forEach(d => {
+      const datos  = d.data();
+      switch (datos.estado) {
+        case "rechazado": rechazados.push({ id: d.id, datos }); break;
+        case "borrador":  borradores.push({ id: d.id, datos }); break;
+        default:          historial.push({ id: d.id, datos });  break;
       }
+    });
 
-      activarModo("edicion");
+    // Rechazados (sección prominente)
+    const secRech   = document.getElementById("seccion-rechazados");
+    const listaRech = document.getElementById("lista-rechazados");
+    if (rechazados.length > 0) {
+      listaRech.innerHTML = "";
+      rechazados.forEach(({ id, datos }) => listaRech.appendChild(crearFila(id, datos)));
+      secRech.style.display = "block";
     } else {
-      borradoreId = null;
-      modoEdicion = false;
-      activarModo("creacion");
+      secRech.style.display = "none";
     }
+
+    // Borradores (en revisión)
+    const listaBorr = document.getElementById("lista-borrador");
+    if (borradores.length > 0) {
+      listaBorr.innerHTML = "";
+      borradores.forEach(({ id, datos }) => listaBorr.appendChild(crearFila(id, datos)));
+    } else {
+      listaBorr.innerHTML = "<p class='lista-vacia'>Sin artículos en revisión.</p>";
+    }
+
+    // Historial (aceptados y publicados, solo lectura)
+    const secHist   = document.getElementById("seccion-historial");
+    const listaHist = document.getElementById("lista-historial");
+    if (historial.length > 0) {
+      listaHist.innerHTML = "";
+      historial.forEach(({ id, datos }) => listaHist.appendChild(crearFila(id, datos)));
+      secHist.style.display = "block";
+    } else {
+      secHist.style.display = "none";
+    }
+
   } catch (error) {
-    console.error("Error al verificar borrador:", error);
+    console.error("Error al cargar artículos:", error);
   }
 }
 
-function activarModo(modo) {
-  const esEdicion = modo === "edicion";
-  document.getElementById("seccion-titulo").textContent    = esEdicion ? "TU ARTÍCULO EN REVISIÓN" : "NUEVO ARTÍCULO";
-  document.getElementById("btn-enviar").textContent        = esEdicion ? "Guardar cambios"          : "Enviar a revisión";
-  document.getElementById("aviso-revision").style.display  = esEdicion ? "block"                   : "none";
+// --- CREAR FILA DEL ESCRITOR ---
+function crearFila(id, datos) {
+  const estado = datos.estado;
+  const fecha  = (datos.fechaPublicacion ?? datos.fechaAceptado ?? datos.fecha)
+    ?.toDate().toLocaleDateString("es-MX") ?? "—";
+
+  const badges = {
+    borrador:  `<span class="estado-borrador">En revisión</span>`,
+    aceptado:  `<span class="estado-aceptado">Aceptado</span>`,
+    publicado: `<span class="estado-publicado">Publicado</span>`,
+    rechazado: `<span class="estado-rechazado">Rechazado</span>`,
+  };
+
+  const fila = document.createElement("div");
+  fila.className = "articulo-fila";
+
+  const motivoHtml = estado === "rechazado" && datos.motivoRechazo
+    ? `<p class="motivo-rechazo-texto">"${datos.motivoRechazo}"</p>` : "";
+
+  const editable = estado === "borrador" || estado === "rechazado";
+  const btnLabel = estado === "rechazado" ? "Editar y reenviar" : "Editar";
+
+  const btnHTML = editable
+    ? `<button class="btn-secundario" style="flex-shrink:0; padding:6px 14px; font-size:0.8rem;">${btnLabel}</button>`
+    : "";
+
+  fila.innerHTML = `
+    <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
+    <div class="articulo-fila-info">
+      <p class="articulo-fila-titulo">${datos.titulo}</p>
+      <p class="articulo-fila-meta">${datos.categoria} · ${fecha}</p>
+      ${motivoHtml}
+    </div>
+    ${badges[estado] ?? ""}
+    ${btnHTML}`;
+
+  const btn = fila.querySelector(".btn-secundario");
+  if (btn) btn.addEventListener("click", () => abrirFormEdicion(id, datos));
+
+  return fila;
 }
 
-// --- VISTA PREVIA DE IMAGEN ---
-document.getElementById("imagen").addEventListener("change", (e) => {
-  const archivo = e.target.files[0];
-  if (!archivo) return;
-  document.getElementById("vista-previa").src                      = URL.createObjectURL(archivo);
-  document.getElementById("vista-previa-contenedor").style.display = "block";
+// --- ABRIR FORMULARIO EN MODO EDICIÓN ---
+function abrirFormEdicion(id, datos) {
+  articuloEnEdicion = { id, datos, estado: datos.estado };
+
+  document.getElementById("titulo").value    = datos.titulo    || "";
+  document.getElementById("categoria").value = datos.categoria || "";
+  document.getElementById("contenido").value = datos.contenido || "";
+  document.getElementById("error-imagen").style.display = "none";
+
+  if (datos.imagenURL) {
+    document.getElementById("vista-previa").src                      = datos.imagenURL;
+    document.getElementById("vista-previa-contenedor").style.display = "block";
+  } else {
+    document.getElementById("vista-previa-contenedor").style.display = "none";
+  }
+
+  const esRechazado = datos.estado === "rechazado";
+  document.getElementById("aviso-rechazo").style.display  = esRechazado ? "block" : "none";
+  document.getElementById("aviso-revision").style.display = esRechazado ? "none"  : "block";
+
+  if (esRechazado && datos.motivoRechazo) {
+    document.getElementById("texto-motivo").textContent = datos.motivoRechazo;
+  }
+
+  document.getElementById("titulo-form").textContent = esRechazado ? "EDITAR Y REENVIAR" : "EDITAR ARTÍCULO";
+  document.getElementById("btn-enviar").textContent  = esRechazado ? "Reenviar a revisión" : "Guardar cambios";
+  document.getElementById("form-estado").textContent = "";
+
+  mostrarPanelForm();
+}
+
+// --- ABRIR FORMULARIO EN MODO CREACIÓN ---
+document.getElementById("btn-nuevo-articulo").addEventListener("click", () => {
+  articuloEnEdicion = null;
+
+  document.getElementById("form-articulo").reset();
+  document.getElementById("vista-previa-contenedor").style.display = "none";
+  document.getElementById("aviso-rechazo").style.display           = "none";
+  document.getElementById("aviso-revision").style.display          = "none";
+  document.getElementById("error-imagen").style.display            = "none";
+  document.getElementById("titulo-form").textContent               = "NUEVO ARTÍCULO";
+  document.getElementById("btn-enviar").textContent                = "Enviar a revisión";
+  document.getElementById("form-estado").textContent               = "";
+
+  mostrarPanelForm();
 });
 
-// --- HELPER: subir imagen a Cloudinary ---
+function mostrarPanelForm() {
+  document.getElementById("panel-lista").style.display = "none";
+  document.getElementById("panel-form").style.display  = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// --- CANCELAR Y VOLVER ---
+document.getElementById("btn-cancelar-form").addEventListener("click", () => {
+  document.getElementById("panel-form").style.display  = "none";
+  document.getElementById("panel-lista").style.display = "block";
+  articuloEnEdicion = null;
+});
+
+// --- VALIDACIÓN DE IMAGEN (formato + tamaño + dimensiones) ---
+async function validarImagen(archivo) {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
+    return "Solo se admiten imágenes JPG, PNG o WebP.";
+  }
+  if (archivo.size > LIMITE_BYTES) {
+    return "La imagen no puede superar 5 MB.";
+  }
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(archivo);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      if (img.naturalWidth < MIN_W || img.naturalHeight < MIN_H) {
+        resolve(`La imagen debe medir al menos ${MIN_W} × ${MIN_H} px (tiene ${img.naturalWidth} × ${img.naturalHeight} px).`);
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve("No se pudo leer la imagen."); };
+    img.src = url;
+  });
+}
+
+// --- VISTA PREVIA CON VALIDACIÓN ---
+document.getElementById("imagen").addEventListener("change", async (e) => {
+  const archivo  = e.target.files[0];
+  const errEl    = document.getElementById("error-imagen");
+  const previaCont = document.getElementById("vista-previa-contenedor");
+
+  errEl.style.display = "none";
+  if (!archivo) return;
+
+  const error = await validarImagen(archivo);
+  if (error) {
+    errEl.textContent   = error;
+    errEl.style.display = "block";
+    e.target.value      = "";
+    previaCont.style.display = "none";
+    return;
+  }
+
+  document.getElementById("vista-previa").src = URL.createObjectURL(archivo);
+  previaCont.style.display = "block";
+});
+
+// --- SUBIR IMAGEN A FIREBASE STORAGE ---
 async function subirImagen(archivo) {
-  const formData = new FormData();
-  formData.append("file",          archivo);
-  formData.append("upload_preset", CLOUDINARY_PRESET);
-  const respuesta = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-  if (!respuesta.ok) throw new Error("Error al subir imagen");
-  return (await respuesta.json()).secure_url;
+  const ruta       = `articulos/${uidActual}/${Date.now()}_${archivo.name}`;
+  const storageRef = ref(storage, ruta);
+  await uploadBytes(storageRef, archivo);
+  return getDownloadURL(storageRef);
 }
 
 // --- ENVIAR / GUARDAR ---
@@ -112,42 +267,46 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
 
   const btnEnviar   = document.getElementById("btn-enviar");
   const estadoTexto = document.getElementById("form-estado");
+  const errImagen   = document.getElementById("error-imagen");
 
   const titulo    = document.getElementById("titulo").value.trim();
   const categoria = document.getElementById("categoria").value;
   const contenido = document.getElementById("contenido").value.trim();
   const archivo   = document.getElementById("imagen").files[0];
 
-  if (!modoEdicion && !archivo) {
-    estadoTexto.textContent = "La imagen principal es obligatoria.";
-    estadoTexto.style.color = "var(--rojo)";
+  // Imagen obligatoria en modo creación
+  if (!articuloEnEdicion && !archivo) {
+    errImagen.textContent   = "La imagen principal es obligatoria.";
+    errImagen.style.display = "block";
     return;
+  }
+
+  // Validar imagen nueva si existe
+  if (archivo) {
+    const error = await validarImagen(archivo);
+    if (error) {
+      errImagen.textContent   = error;
+      errImagen.style.display = "block";
+      return;
+    }
+    errImagen.style.display = "none";
   }
 
   btnEnviar.disabled      = true;
   estadoTexto.style.color = "#555";
 
   try {
-    if (modoEdicion) {
-      const actualizacion = { titulo, categoria, contenido };
+    let imagenURL = articuloEnEdicion?.datos?.imagenURL ?? null;
 
-      if (archivo) {
-        estadoTexto.textContent = "Subiendo imagen...";
-        actualizacion.imagenURL = await subirImagen(archivo);
-      }
-
-      estadoTexto.textContent = "Guardando cambios...";
-      await updateDoc(doc(db, "articulos", borradoreId), actualizacion);
-
-      estadoTexto.style.color = "green";
-      estadoTexto.textContent = "Cambios guardados.";
-
-    } else {
+    if (archivo) {
       estadoTexto.textContent = "Subiendo imagen...";
-      const imagenURL = await subirImagen(archivo);
+      imagenURL = await subirImagen(archivo);
+    }
 
+    if (!articuloEnEdicion) {
+      // MODO CREACIÓN
       estadoTexto.textContent = "Enviando artículo...";
-      const nuevoDoc = await addDoc(collection(db, "articulos"), {
+      await addDoc(collection(db, "articulos"), {
         titulo,
         contenido,
         estado:    "borrador",
@@ -157,13 +316,41 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
         uid:       uidActual
       });
 
-      borradoreId = nuevoDoc.id;
-      modoEdicion = true;
-      activarModo("edicion");
-
       estadoTexto.style.color = "green";
       estadoTexto.textContent = "Artículo enviado a revisión.";
+
+    } else {
+      // MODO EDICIÓN (borrador o rechazado)
+      const esRechazado = articuloEnEdicion.estado === "rechazado";
+      const actualizacion = {
+        titulo,
+        categoria,
+        contenido,
+        estado: "borrador",
+        ...(archivo ? { imagenURL } : {})
+      };
+
+      if (esRechazado) {
+        actualizacion.motivoRechazo  = null;
+        actualizacion.fechaRechazado = null;
+        actualizacion.fecha          = Timestamp.now();
+      }
+
+      estadoTexto.textContent = "Guardando cambios...";
+      await updateDoc(doc(db, "articulos", articuloEnEdicion.id), actualizacion);
+
+      estadoTexto.style.color = "green";
+      estadoTexto.textContent = esRechazado ? "Artículo reenviado a revisión." : "Cambios guardados.";
     }
+
+    // Volver al panel después de un momento
+    setTimeout(async () => {
+      document.getElementById("panel-form").style.display  = "none";
+      document.getElementById("panel-lista").style.display = "block";
+      articuloEnEdicion = null;
+      document.getElementById("lista-borrador").innerHTML = "<p class='lista-vacia'>Cargando...</p>";
+      await cargarArticulos();
+    }, 1200);
 
   } catch (error) {
     estadoTexto.style.color = "var(--rojo)";

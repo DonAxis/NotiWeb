@@ -21,54 +21,100 @@
 
   <main class="contenedor">
 
-    <section class="seccion">
-      <h2 class="seccion-titulo" id="seccion-titulo">NUEVO ARTÍCULO</h2>
+    <!-- PANEL LISTA: artículos del escritor -->
+    <div id="panel-lista">
 
-      <div id="aviso-revision" style="display:none; background:#fff8e1; border-left:3px solid #f57f17; padding:10px 14px; border-radius:2px; margin-bottom:16px; font-size:0.85rem; color:#555;">
-        Tu artículo está pendiente de revisión. Puedes editarlo hasta que el editor lo apruebe.
+      <!-- Rechazados: solo visibles si hay alguno -->
+      <section id="seccion-rechazados" class="seccion" style="display:none;">
+        <h2 class="seccion-titulo" style="color:var(--rojo);">REQUIEREN TU ATENCIÓN</h2>
+        <div id="lista-rechazados" class="lista-articulos"></div>
+      </section>
+
+      <!-- Borradores en revisión -->
+      <section class="seccion">
+        <h2 class="seccion-titulo">EN REVISIÓN</h2>
+        <div id="lista-borrador" class="lista-articulos">
+          <p class="lista-vacia">Cargando...</p>
+        </div>
+      </section>
+
+      <!-- Aceptados y publicados: solo si hay alguno -->
+      <section id="seccion-historial" class="seccion" style="display:none;">
+        <h2 class="seccion-titulo">HISTORIAL</h2>
+        <div id="lista-historial" class="lista-articulos"></div>
+      </section>
+
+      <div class="form-acciones" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--gris-borde); justify-content:flex-start;">
+        <button class="btn-primario" id="btn-nuevo-articulo">+ Nuevo artículo</button>
       </div>
 
-      <form id="form-articulo" class="formulario">
+    </div>
 
-        <div class="campo">
-          <label for="titulo">Título</label>
-          <input type="text" id="titulo" maxlength="200" required placeholder="Título accesible para el lector">
-        </div>
+    <!-- PANEL FORMULARIO: crear / editar -->
+    <div id="panel-form" style="display:none;">
 
-        <div class="campo">
-          <label for="categoria">Categoría</label>
-          <select id="categoria" required>
-            <option value="">Selecciona una categoría</option>
-            <option value="noticias">Noticias</option>
-            <option value="avisos">Avisos</option>
-            <option value="deportes">Deportes</option>
-            <option value="logros">Logros</option>
-            <option value="eventos">Eventos</option>
-          </select>
-        </div>
+      <div style="margin-bottom:16px;">
+        <button class="btn-secundario" id="btn-cancelar-form">← Volver</button>
+      </div>
 
-        <div class="campo">
-          <label for="imagen">Imagen principal</label>
-          <input type="file" id="imagen" accept="image/*">
-          <p class="campo-ayuda">Máx 5 MB · JPG, PNG o WebP · Omite para conservar la imagen actual.</p>
-          <div id="vista-previa-contenedor" style="display:none;">
-            <img id="vista-previa" src="" alt="Vista previa" style="max-height:160px; margin-top:8px; display:block;">
+      <!-- Aviso de rechazo -->
+      <div id="aviso-rechazo" style="display:none; background:#fff8f8; border-left:3px solid #b71c1c; padding:12px 16px; border-radius:2px; margin-bottom:16px;">
+        <p style="font-size:0.82rem; font-weight:700; color:#b71c1c; margin-bottom:4px;">Este artículo fue rechazado</p>
+        <p id="texto-motivo" style="font-size:0.85rem; color:#333;"></p>
+      </div>
+
+      <!-- Aviso en revisión (para borradores) -->
+      <div id="aviso-revision" style="display:none; background:#fff8e1; border-left:3px solid #f57f17; padding:10px 14px; border-radius:2px; margin-bottom:16px; font-size:0.85rem; color:#555;">
+        Tu artículo está pendiente de revisión. Puedes editarlo hasta que el editor lo revise.
+      </div>
+
+      <section class="seccion">
+        <h2 class="seccion-titulo" id="titulo-form">NUEVO ARTÍCULO</h2>
+
+        <form id="form-articulo" class="formulario">
+
+          <div class="campo">
+            <label for="titulo">Título</label>
+            <input type="text" id="titulo" maxlength="200" required placeholder="Título accesible para el lector">
           </div>
-        </div>
 
-        <div class="campo">
-          <label for="contenido">Texto del artículo</label>
-          <textarea id="contenido" rows="14" maxlength="50000" required
-            placeholder="Escribe aquí el artículo..."></textarea>
-        </div>
+          <div class="campo">
+            <label for="categoria">Categoría</label>
+            <select id="categoria" required>
+              <option value="">Selecciona una categoría</option>
+              <option value="noticias">Noticias</option>
+              <option value="avisos">Avisos</option>
+              <option value="deportes">Deportes</option>
+              <option value="logros">Logros</option>
+              <option value="eventos">Eventos</option>
+            </select>
+          </div>
 
-        <div class="form-acciones">
-          <p class="form-estado" id="form-estado"></p>
-          <button type="submit" class="btn-primario" id="btn-enviar">Enviar a revisión</button>
-        </div>
+          <div class="campo">
+            <label for="imagen">Imagen principal</label>
+            <input type="file" id="imagen" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+            <p class="campo-ayuda">Máx 5 MB · JPG, PNG o WebP · Mín 600 × 400 px · Omite para conservar la imagen actual.</p>
+            <p id="error-imagen" style="color:var(--rojo); font-size:0.8rem; display:none; margin-top:4px;"></p>
+            <div id="vista-previa-contenedor" style="display:none;">
+              <img id="vista-previa" src="" alt="Vista previa" style="max-height:160px; margin-top:8px; display:block;">
+            </div>
+          </div>
 
-      </form>
-    </section>
+          <div class="campo">
+            <label for="contenido">Texto del artículo</label>
+            <textarea id="contenido" rows="14" maxlength="50000" required
+              placeholder="Escribe aquí el artículo..."></textarea>
+          </div>
+
+          <div class="form-acciones">
+            <p class="form-estado" id="form-estado"></p>
+            <button type="submit" class="btn-primario" id="btn-enviar">Enviar a revisión</button>
+          </div>
+
+        </form>
+      </section>
+
+    </div>
 
   </main>
 
