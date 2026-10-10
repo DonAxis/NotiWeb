@@ -54,15 +54,22 @@ async function cargarPendientes() {
           <td>${nombre ?? "—"}</td>
           <td>${correo ?? "—"}</td>
           <td>
-            <button class="btn-aprobar"   data-uid="${uid}" data-nombre="${nombre}">Aprobar</button>
-            <button class="btn-eliminar"  data-uid="${uid}" data-nombre="${nombre}">Rechazar</button>
+            <select class="sel-rol" data-uid="${uid}">
+              <option value="escritor">Escritor</option>
+              <option value="editor">Editor</option>
+            </select>
+            <button class="btn-aprobar"  data-uid="${uid}" data-nombre="${nombre}">Aprobar</button>
+            <button class="btn-eliminar" data-uid="${uid}" data-nombre="${nombre}">Rechazar</button>
           </td>
         </tr>`;
     });
 
-    tbody.querySelectorAll(".btn-aprobar").forEach(btn =>
-      btn.addEventListener("click", () => aprobarUsuario(btn.dataset.uid, btn.dataset.nombre))
-    );
+    tbody.querySelectorAll(".btn-aprobar").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const sel = tbody.querySelector(`.sel-rol[data-uid="${btn.dataset.uid}"]`);
+        aprobarUsuario(btn.dataset.uid, btn.dataset.nombre, sel.value);
+      });
+    });
     tbody.querySelectorAll(".btn-eliminar").forEach(btn =>
       btn.addEventListener("click", () => eliminarUsuario(btn.dataset.uid, btn.dataset.nombre))
     );
@@ -73,10 +80,10 @@ async function cargarPendientes() {
   }
 }
 
-async function aprobarUsuario(uid, nombre) {
-  if (!confirm(`¿Aprobar a "${nombre}" como escritor?`)) return;
+async function aprobarUsuario(uid, nombre, rol) {
+  if (!confirm(`¿Aprobar a "${nombre}" como ${rol}?`)) return;
   try {
-    await updateDoc(doc(db, "usuarios", uid), { rol: "escritor" });
+    await updateDoc(doc(db, "usuarios", uid), { rol });
     cargarPendientes();
     cargarUsuarios();
   } catch (error) {
