@@ -111,8 +111,8 @@
           <div class="campo">
             <label for="imagen">Imagen de portada</label>
             <input type="file" id="imagen" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-            <p class="campo-ayuda">Obligatoria · Máx 1 MB · JPG, PNG o WebP · Mín 600 × 400 px · Omite para conservar la actual.</p>
-            <p id="error-imagen" style="color:var(--rojo); font-size:0.8rem; display:none; margin-top:4px;"></p>
+            <p class="campo-ayuda">Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px · Omite para conservar la actual.</p>
+            <p id="error-imagen" class="campo-error"></p>
             <div id="vista-previa-contenedor" style="display:none;">
               <img id="vista-previa" src="" alt="Vista previa portada" style="max-height:160px; margin-top:8px; display:block;">
             </div>
@@ -121,8 +121,8 @@
           <div class="campo">
             <label for="imagen2">Imagen del artículo <span style="font-weight:400; color:#888;">(opcional)</span></label>
             <input type="file" id="imagen2" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-            <p class="campo-ayuda">Máx 2 MB · JPG, PNG o WebP · Se muestra dentro del cuerpo del artículo.</p>
-            <p id="error-imagen2" style="color:var(--rojo); font-size:0.8rem; display:none; margin-top:4px;"></p>
+            <p class="campo-ayuda">Máx 3 MB · JPG, PNG o WebP · Se muestra dentro del cuerpo del artículo.</p>
+            <p id="error-imagen2" class="campo-error"></p>
             <div id="vista-previa2-contenedor" style="display:none;">
               <img id="vista-previa2" src="" alt="Vista previa artículo" style="max-height:160px; margin-top:8px; display:block;">
             </div>

@@ -71,6 +71,14 @@
   color: #888;
 }
 
+.campo-error {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--rojo);
+  margin-top: 4px;
+  display: none;
+}
+
 .campo input[type="file"] {
   font-size: 0.85rem;
   padding: 6px 0;

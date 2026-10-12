@@ -12,8 +12,8 @@ import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.c
 //   allow read:  if true;
 // }
 
-const LIMITE_PORTADA = 1 * 1024 * 1024; // 1 MB
-const LIMITE_DOC     = 2 * 1024 * 1024; // 2 MB
+const LIMITE_PORTADA = 3 * 1024 * 1024; // 3 MB
+const LIMITE_DOC     = 3 * 1024 * 1024; // 3 MB
 const MIN_W = 600, MIN_H = 400;
 
 const SUBCATEGORIAS = {
