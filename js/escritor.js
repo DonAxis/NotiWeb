@@ -448,3 +448,18 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
     btnEnviar.disabled = false;
   }
 });
+
+// --- BOTÓN NEGRITA ---
+document.getElementById("btn-negrita").addEventListener("click", () => {
+  const ta    = document.getElementById("contenido");
+  const start = ta.selectionStart;
+  const end   = ta.selectionEnd;
+  if (start === end) return;
+  const antes   = ta.value.substring(0, start);
+  const sel     = ta.value.substring(start, end);
+  const despues = ta.value.substring(end);
+  ta.value          = `${antes}**${sel}**${despues}`;
+  ta.selectionStart = start + 2;
+  ta.selectionEnd   = end   + 2;
+  ta.focus();
+});

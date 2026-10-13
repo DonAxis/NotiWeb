@@ -7,6 +7,14 @@ import { collection, doc, updateDoc, getDocs,
 
 const MAX_DESTACADOS = 5;
 
+function renderContenido(texto) {
+  return (texto || "")
+    .replace(/&/g,  "&amp;")
+    .replace(/</g,  "&lt;")
+    .replace(/>/g,  "&gt;")
+    .replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>");
+}
+
 let articuloActual = null; // { id, datos, estado }
 
 // --- PROTECCIÓN DE RUTA ---
@@ -179,8 +187,8 @@ function abrirVista(id, datos, estado) {
 
   const parrafos = (datos.contenido || "").split("\n\n");
   const mitad    = Math.ceil(parrafos.length / 2);
-  const parte1   = parrafos.slice(0, mitad).join("\n\n");
-  const parte2   = parrafos.slice(mitad).join("\n\n");
+  const parte1   = renderContenido(parrafos.slice(0, mitad).join("\n\n"));
+  const parte2   = renderContenido(parrafos.slice(mitad).join("\n\n"));
 
   const img2 = datos.imagen2URL ? `<img src="${datos.imagen2URL}" alt="" class="art-imagen-extra">` : "";
   const img3 = datos.imagen3URL ? `<img src="${datos.imagen3URL}" alt="" class="art-imagen-extra">` : "";
@@ -206,14 +214,14 @@ function abrirVista(id, datos, estado) {
     ${motivoHtml}
     <p class="art-categoria">${datos.categoria}</p>
     <h1 class="art-titulo">${datos.titulo}</h1>
-    <p class="art-meta">${fechaTexto} · Escrito por <span id="escritor-nombre">—</span></p>
+    <p class="art-meta">${fechaTexto}${estado === "aceptado" ? ' · Escrito por <span id="escritor-nombre">—</span>' : ""}</p>
     <img src="${datos.imagenURL}" alt="${datos.titulo}" class="art-imagen-principal">
     <div class="art-contenido">${parte1}</div>
     ${img2}
     <div class="art-contenido">${parte2}</div>
     ${img3}`;
 
-  if (datos.uid) {
+  if (estado === "aceptado" && datos.uid) {
     getDoc(doc(db, "usuarios", datos.uid)).then(snap => {
       const el = document.getElementById("escritor-nombre");
       if (el) el.textContent = snap.exists() ? (snap.data().nombre || datos.uid) : datos.uid;

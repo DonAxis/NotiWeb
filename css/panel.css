@@ -223,6 +223,27 @@
 
 .btn-primario.btn-peligro { background-color: #b71c1c; }
 
+.barra-formato {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.btn-formato {
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  width: 30px;
+  height: 28px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-formato:hover  { background: #f0f0f0; border-color: #aaa; }
+.btn-formato:active { background: #e0e0e0; }
+
 .zona-edicion {
   background: #f0f4ff;
   border: 1px solid #b3c6e7;

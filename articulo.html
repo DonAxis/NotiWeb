@@ -99,6 +99,14 @@
     import { db }           from "./js/firebase.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
+    function renderContenido(texto) {
+      return (texto || "")
+        .replace(/&/g,  "&amp;")
+        .replace(/</g,  "&lt;")
+        .replace(/>/g,  "&gt;")
+        .replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>");
+    }
+
     const params     = new URLSearchParams(window.location.search);
     const id         = params.get("id");
     const contenedor = document.getElementById("contenido-articulo");
@@ -139,8 +147,8 @@
         // Partir el contenido en dos mitades para intercalar imagen 2
         const parrafos = a.contenido.split("\n\n");
         const mitad    = Math.ceil(parrafos.length / 2);
-        const parte1   = parrafos.slice(0, mitad).join("\n\n");
-        const parte2   = parrafos.slice(mitad).join("\n\n");
+        const parte1   = renderContenido(parrafos.slice(0, mitad).join("\n\n"));
+        const parte2   = renderContenido(parrafos.slice(mitad).join("\n\n"));
 
         contenedor.innerHTML = `
           <p class="art-categoria">${a.categoria}</p>
