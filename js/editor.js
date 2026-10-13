@@ -206,12 +206,19 @@ function abrirVista(id, datos, estado) {
     ${motivoHtml}
     <p class="art-categoria">${datos.categoria}</p>
     <h1 class="art-titulo">${datos.titulo}</h1>
-    <p class="art-meta">${fechaTexto}</p>
+    <p class="art-meta">${fechaTexto} · Escrito por <span id="escritor-nombre">—</span></p>
     <img src="${datos.imagenURL}" alt="${datos.titulo}" class="art-imagen-principal">
     <div class="art-contenido">${parte1}</div>
     ${img2}
     <div class="art-contenido">${parte2}</div>
     ${img3}`;
+
+  if (datos.uid) {
+    getDoc(doc(db, "usuarios", datos.uid)).then(snap => {
+      const el = document.getElementById("escritor-nombre");
+      if (el) el.textContent = snap.exists() ? (snap.data().nombre || datos.uid) : datos.uid;
+    }).catch(() => {});
+  }
 
   const btnAceptar  = document.getElementById("btn-aceptar");
   const btnPublicar = document.getElementById("btn-publicar");
