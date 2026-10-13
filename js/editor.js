@@ -43,7 +43,7 @@ onAuthStateChanged(auth, async (usuario) => {
 function cargarTodo() {
   cargarPendientes();
   cargarAceptados();
-  cargarPublicados("noticias");
+  cargarPublicados("mundo");
   cargarRechazados();
 }
 
@@ -172,7 +172,7 @@ function crearFila(id, datos, fecha, estado) {
       btnDest.disabled = true;
       await toggleDestacadoConLimite(id, datos);
       const tabActivo = document.querySelector("#tabs-publicados .tab.activo");
-      await cargarPublicados(tabActivo ? tabActivo.dataset.cat : "noticias");
+      await cargarPublicados(tabActivo ? tabActivo.dataset.cat : "mundo");
     });
   }
 
