@@ -42,13 +42,13 @@ async function cargarUltimasNoticias() {
   }
 }
 
-// --- VIDA ESTUDIANTIL (2 más recientes de vida-estudiantil) ---
+// --- VIDA ESTUDIANTIL (2 más recientes de ocio) ---
 async function cargarVidaEstudiantil() {
   try {
     const q = query(
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
-      where("categoria", "==", "vida-estudiantil"),
+      where("categoria", "==", "ocio"),
       orderBy("fechaPublicacion", "desc"),
       limit(2)
     );
@@ -270,4 +270,4 @@ document.querySelectorAll(".explorar-tab").forEach(tab => {
 const tabActivo = document.querySelector(".tab.activo");
 cargarUltimasNoticias();
 cargarVidaEstudiantil();
-cargarCarrusel(tabActivo ? tabActivo.dataset.categoria : "noticias");
+cargarCarrusel(tabActivo ? tabActivo.dataset.categoria : "mundo");
