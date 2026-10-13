@@ -175,6 +175,7 @@ function crearFila(id, datos, fecha, estado) {
 function abrirVista(id, datos, estado) {
   articuloActual = { id, datos, estado };
   ocultarZonaRechazo();
+  ocultarZonaEdicion();
 
   const parrafos = (datos.contenido || "").split("\n\n");
   const mitad    = Math.ceil(parrafos.length / 2);
@@ -214,6 +215,7 @@ function abrirVista(id, datos, estado) {
 
   const btnAceptar  = document.getElementById("btn-aceptar");
   const btnPublicar = document.getElementById("btn-publicar");
+  const btnEditar   = document.getElementById("btn-editar");
   const btnRechazar = document.getElementById("btn-rechazar");
   const btnDestacar = document.getElementById("btn-destacar");
 
@@ -221,6 +223,7 @@ function abrirVista(id, datos, estado) {
 
   btnAceptar.style.display  = estado === "borrador"  ? "inline-block" : "none";
   btnPublicar.style.display = estado === "aceptado"  ? "inline-block" : "none";
+  btnEditar.style.display   = estado === "aceptado"  ? "inline-block" : "none";
   btnRechazar.style.display = (estado === "borrador" || estado === "aceptado") ? "inline-block" : "none";
   btnDestacar.style.display = estado === "publicado" ? "inline-block" : "none";
 
@@ -240,6 +243,10 @@ function abrirVista(id, datos, estado) {
 function ocultarZonaRechazo() {
   document.getElementById("zona-rechazo").style.display = "none";
   document.getElementById("motivo-rechazo").value       = "";
+}
+
+function ocultarZonaEdicion() {
+  document.getElementById("zona-edicion").style.display = "none";
 }
 
 // --- VOLVER AL PANEL ---
@@ -302,11 +309,57 @@ document.getElementById("btn-publicar").addEventListener("click", async () => {
   }
 });
 
+// --- EDITAR (solo para aceptados) ---
+document.getElementById("btn-editar").addEventListener("click", () => {
+  const zona = document.getElementById("zona-edicion");
+  if (zona.style.display === "block") {
+    ocultarZonaEdicion();
+    return;
+  }
+  ocultarZonaRechazo();
+  document.getElementById("edicion-titulo").value    = articuloActual.datos.titulo    || "";
+  document.getElementById("edicion-contenido").value = articuloActual.datos.contenido || "";
+  zona.style.display = "block";
+  document.getElementById("edicion-titulo").focus();
+});
+
+document.getElementById("btn-cancelar-edicion").addEventListener("click", ocultarZonaEdicion);
+
+document.getElementById("btn-confirmar-edicion").addEventListener("click", async () => {
+  if (!articuloActual) return;
+  const titulo    = document.getElementById("edicion-titulo").value.trim();
+  const contenido = document.getElementById("edicion-contenido").value.trim();
+  if (!titulo)    { document.getElementById("edicion-titulo").focus();    return; }
+  if (!contenido) { document.getElementById("edicion-contenido").focus(); return; }
+
+  const btn    = document.getElementById("btn-confirmar-edicion");
+  const estado = document.getElementById("vista-estado");
+
+  btn.disabled       = true;
+  estado.style.color = "#555";
+  estado.textContent = "Guardando...";
+
+  try {
+    await updateDoc(doc(db, "articulos", articuloActual.id), { titulo, contenido });
+    articuloActual.datos.titulo    = titulo;
+    articuloActual.datos.contenido = contenido;
+    abrirVista(articuloActual.id, articuloActual.datos, articuloActual.estado);
+    document.getElementById("vista-estado").style.color = "green";
+    document.getElementById("vista-estado").textContent = "Cambios guardados.";
+  } catch (error) {
+    estado.style.color = "var(--rojo)";
+    estado.textContent = "Error. Intenta de nuevo.";
+    btn.disabled = false;
+    console.error(error);
+  }
+});
+
 // --- RECHAZAR: toggle zona ---
 document.getElementById("btn-rechazar").addEventListener("click", () => {
   const zona = document.getElementById("zona-rechazo");
   zona.style.display = zona.style.display === "block" ? "none" : "block";
   if (zona.style.display === "block") {
+    ocultarZonaEdicion();
     document.getElementById("motivo-rechazo").focus();
   }
 });

@@ -223,6 +223,30 @@
 
 .btn-primario.btn-peligro { background-color: #b71c1c; }
 
+.zona-edicion {
+  background: #f0f4ff;
+  border: 1px solid #b3c6e7;
+  border-radius: 4px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.zona-edicion input[type="text"],
+.zona-edicion textarea {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  margin-top: 6px;
+}
+.zona-edicion textarea { resize: vertical; }
+.zona-edicion input:focus,
+.zona-edicion textarea:focus {
+  outline: none;
+  border-color: #1565c0;
+}
+
 .motivo-rechazo-texto {
   font-size: 0.78rem;
   color: #b71c1c;

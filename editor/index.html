@@ -37,6 +37,7 @@
       line-height: 1.8;
       color: #222;
       white-space: pre-wrap;
+      text-align: justify;
     }
     .art-imagen-extra {
       width: 100%;
@@ -118,9 +119,27 @@
         <button class="btn-secundario" id="btn-volver">← Volver</button>
         <button class="btn-primario"   id="btn-aceptar"  style="display:none;">Aceptar</button>
         <button class="btn-primario"   id="btn-publicar" style="display:none;">Publicar ahora</button>
+        <button class="btn-secundario" id="btn-editar"   style="display:none;">Editar</button>
         <button class="btn-secundario" id="btn-rechazar" style="display:none;">Rechazar…</button>
         <button class="btn-destacado"  id="btn-destacar" style="display:none;">☆ Destacar</button>
         <p class="form-estado" id="vista-estado"></p>
+      </div>
+
+      <!-- Zona de edición (toggle, solo para aceptados) -->
+      <div id="zona-edicion" class="zona-edicion" style="display:none;">
+        <p style="font-size:0.82rem; font-weight:700; color:#444; margin-bottom:10px;">EDITAR ARTÍCULO</p>
+        <div class="campo">
+          <label for="edicion-titulo">Título</label>
+          <input id="edicion-titulo" type="text" maxlength="200">
+        </div>
+        <div class="campo" style="margin-top:10px;">
+          <label for="edicion-contenido">Contenido</label>
+          <textarea id="edicion-contenido" rows="12"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn-primario" id="btn-confirmar-edicion">Guardar cambios</button>
+          <button class="btn-secundario" id="btn-cancelar-edicion">Cancelar</button>
+        </div>
       </div>
 
       <!-- Zona de rechazo (toggle) -->
