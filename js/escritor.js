@@ -24,6 +24,8 @@ const SUBCATEGORIAS = {
 
 let uidActual         = null;
 let articuloEnEdicion = null; // null = nuevo · { id, datos, estado } = edición
+let quitarPortada     = false;
+let quitarImagen2     = false;
 
 // --- LÓGICA DE SUBCATEGORÍA / CONTINENTE ---
 function actualizarCamposSecundarios(categoria, valorSub = "", valorCont = "") {
@@ -197,19 +199,29 @@ function abrirFormEdicion(id, datos) {
   document.getElementById("error-imagen").style.display = "none";
   actualizarCamposSecundarios(datos.categoria || "", datos.subcategoria || "", datos.continente || "");
 
+  quitarPortada = false;
+  quitarImagen2 = false;
+
   if (datos.imagenURL) {
     document.getElementById("vista-previa").src                      = datos.imagenURL;
     document.getElementById("vista-previa-contenedor").style.display = "block";
+    document.getElementById("btn-quitar-portada").style.display      = "inline-block";
   } else {
     document.getElementById("vista-previa-contenedor").style.display = "none";
+    document.getElementById("btn-quitar-portada").style.display      = "none";
   }
 
   if (datos.imagen2URL) {
     document.getElementById("vista-previa2").src                      = datos.imagen2URL;
     document.getElementById("vista-previa2-contenedor").style.display = "block";
+    document.getElementById("btn-quitar-imagen2").style.display       = "inline-block";
   } else {
     document.getElementById("vista-previa2-contenedor").style.display = "none";
+    document.getElementById("btn-quitar-imagen2").style.display       = "none";
   }
+
+  document.getElementById("ayuda-portada").textContent =
+    "Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px · Deja vacío para conservar la imagen actual.";
 
   const esRechazado = datos.estado === "rechazado";
   document.getElementById("aviso-rechazo").style.display  = esRechazado ? "block" : "none";
@@ -229,14 +241,26 @@ function abrirFormEdicion(id, datos) {
 // --- ABRIR FORMULARIO EN MODO CREACIÓN ---
 document.getElementById("btn-nuevo-articulo").addEventListener("click", () => {
   articuloEnEdicion = null;
+  quitarPortada     = false;
+  quitarImagen2     = false;
 
   document.getElementById("form-articulo").reset();
+  // Limpieza explícita de inputs de archivo (form.reset() no es confiable en todos los navegadores)
+  document.getElementById("imagen").value  = "";
+  document.getElementById("imagen2").value = "";
+  // Limpiar src para evitar estado visual residual
+  document.getElementById("vista-previa").src  = "";
+  document.getElementById("vista-previa2").src = "";
+
   document.getElementById("vista-previa-contenedor").style.display  = "none";
   document.getElementById("vista-previa2-contenedor").style.display = "none";
+  document.getElementById("btn-quitar-portada").style.display       = "none";
+  document.getElementById("btn-quitar-imagen2").style.display       = "none";
   document.getElementById("aviso-rechazo").style.display            = "none";
   document.getElementById("aviso-revision").style.display           = "none";
   document.getElementById("error-imagen").style.display             = "none";
   document.getElementById("error-imagen2").style.display            = "none";
+  document.getElementById("ayuda-portada").textContent              = "Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px";
   actualizarCamposSecundarios("");
   document.getElementById("titulo-form").textContent               = "NUEVO ARTÍCULO";
   document.getElementById("btn-enviar").textContent                = "Enviar a revisión";
@@ -256,6 +280,8 @@ document.getElementById("btn-cancelar-form").addEventListener("click", () => {
   document.getElementById("panel-form").style.display  = "none";
   document.getElementById("panel-lista").style.display = "block";
   articuloEnEdicion = null;
+  quitarPortada     = false;
+  quitarImagen2     = false;
 });
 
 // --- VALIDACIÓN DE IMAGEN ---
@@ -307,13 +333,32 @@ async function manejarCambioImagen(e, limite, checkDims, idError, idPrevia, idPr
   previaCont.style.display = "block";
 }
 
-document.getElementById("imagen").addEventListener("change", (e) =>
-  manejarCambioImagen(e, LIMITE_PORTADA, true, "error-imagen", "vista-previa", "vista-previa-contenedor")
-);
+document.getElementById("imagen").addEventListener("change", (e) => {
+  quitarPortada = false;
+  manejarCambioImagen(e, LIMITE_PORTADA, true, "error-imagen", "vista-previa", "vista-previa-contenedor");
+});
 
-document.getElementById("imagen2").addEventListener("change", (e) =>
-  manejarCambioImagen(e, LIMITE_DOC, false, "error-imagen2", "vista-previa2", "vista-previa2-contenedor")
-);
+document.getElementById("imagen2").addEventListener("change", (e) => {
+  quitarImagen2 = false;
+  manejarCambioImagen(e, LIMITE_DOC, false, "error-imagen2", "vista-previa2", "vista-previa2-contenedor");
+});
+
+document.getElementById("btn-quitar-portada").addEventListener("click", () => {
+  quitarPortada = true;
+  document.getElementById("imagen").value              = "";
+  document.getElementById("vista-previa").src          = "";
+  document.getElementById("vista-previa-contenedor").style.display = "none";
+  document.getElementById("btn-quitar-portada").style.display      = "none";
+  document.getElementById("error-imagen").style.display            = "none";
+});
+
+document.getElementById("btn-quitar-imagen2").addEventListener("click", () => {
+  quitarImagen2 = true;
+  document.getElementById("imagen2").value              = "";
+  document.getElementById("vista-previa2").src          = "";
+  document.getElementById("vista-previa2-contenedor").style.display = "none";
+  document.getElementById("btn-quitar-imagen2").style.display       = "none";
+});
 
 // --- SUBIR IMAGEN A FIREBASE STORAGE ---
 async function subirImagen(archivo) {
@@ -414,8 +459,8 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
         continente,
         contenido,
         estado: "borrador",
-        ...(archivo  ? { imagenURL }  : {}),
-        ...(archivo2 ? { imagen2URL } : {})
+        ...(archivo  ? { imagenURL }        : quitarPortada  ? { imagenURL: null }  : {}),
+        ...(archivo2 ? { imagen2URL }       : quitarImagen2  ? { imagen2URL: null } : {}),
       };
 
       if (esRechazado) {
@@ -436,6 +481,8 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
       document.getElementById("panel-form").style.display  = "none";
       document.getElementById("panel-lista").style.display = "block";
       articuloEnEdicion = null;
+      quitarPortada     = false;
+      quitarImagen2     = false;
       document.getElementById("lista-borrador").innerHTML = "<p class='lista-vacia'>Cargando...</p>";
       await cargarArticulos();
     }, 1200);

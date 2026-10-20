@@ -111,10 +111,11 @@
           <div class="campo">
             <label for="imagen">Imagen de portada</label>
             <input type="file" id="imagen" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-            <p class="campo-ayuda">Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px · Omite para conservar la actual.</p>
+            <p id="ayuda-portada" class="campo-ayuda">Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px</p>
             <p id="error-imagen" class="campo-error"></p>
             <div id="vista-previa-contenedor" style="display:none;">
               <img id="vista-previa" src="" alt="Vista previa portada" style="max-height:160px; margin-top:8px; display:block;">
+              <button type="button" id="btn-quitar-portada" class="btn-secundario" style="display:none; margin-top:8px; font-size:0.8rem; padding:5px 12px;">Quitar portada</button>
             </div>
           </div>
 
@@ -125,6 +126,7 @@
             <p id="error-imagen2" class="campo-error"></p>
             <div id="vista-previa2-contenedor" style="display:none;">
               <img id="vista-previa2" src="" alt="Vista previa artículo" style="max-height:160px; margin-top:8px; display:block;">
+              <button type="button" id="btn-quitar-imagen2" class="btn-secundario" style="display:none; margin-top:8px; font-size:0.8rem; padding:5px 12px;">Quitar imagen</button>
             </div>
           </div>
 
