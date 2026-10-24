@@ -368,6 +368,14 @@ async function subirImagen(archivo) {
   return getDownloadURL(storageRef);
 }
 
+// --- CONTEO DE PALABRAS ---
+const MIN_PALABRAS = 150;
+const MAX_PALABRAS = 2000;
+
+function contarPalabras(texto) {
+  return texto.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
 // --- ENVIAR / GUARDAR ---
 document.getElementById("form-articulo").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -413,6 +421,23 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
     }
     errImagen2.style.display = "none";
   }
+
+  // Validar longitud del contenido en palabras
+  const errContenido = document.getElementById("error-contenido");
+  const palabras = contarPalabras(contenido);
+  if (palabras < MIN_PALABRAS) {
+    errContenido.textContent   = `Tu noticia es muy corta para publicar. Mínimo ${MIN_PALABRAS} palabras (tiene ${palabras}).`;
+    errContenido.style.display = "block";
+    document.getElementById("contenido").focus();
+    return;
+  }
+  if (palabras > MAX_PALABRAS) {
+    errContenido.textContent   = `Tu noticia es demasiado larga. Máximo ${MAX_PALABRAS} palabras (tiene ${palabras}).`;
+    errContenido.style.display = "block";
+    document.getElementById("contenido").focus();
+    return;
+  }
+  errContenido.style.display = "none";
 
   btnEnviar.disabled      = true;
   estadoTexto.style.color = "#555";

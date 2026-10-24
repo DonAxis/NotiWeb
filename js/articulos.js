@@ -42,15 +42,15 @@ async function cargarUltimasNoticias() {
   }
 }
 
-// --- VIDA ESTUDIANTIL (2 más recientes de ocio) ---
+// --- VIDA ESTUDIANTIL (3 más recientes) ---
 async function cargarVidaEstudiantil() {
   try {
     const q = query(
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
-      where("categoria", "==", "ocio"),
+      where("categoria", "==", "vida_estudiantil"),
       orderBy("fechaPublicacion", "desc"),
-      limit(2)
+      limit(3)
     );
     const snap = await getDocs(q);
     const articulos = [];

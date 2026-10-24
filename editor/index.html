@@ -109,6 +109,16 @@
         </div>
       </section>
 
+      <section class="seccion">
+        <h2 class="seccion-titulo">VIDA ESTUDIANTIL</h2>
+        <div id="lista-vida" class="lista-articulos">
+          <p class="lista-vacia">Cargando...</p>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn-primario" id="btn-nueva-vida">+ Nueva publicación</button>
+        </div>
+      </section>
+
     </div>
 
     <!-- PANEL VISTA — oculto hasta seleccionar artículo -->
@@ -152,6 +162,61 @@
       </div>
 
       <div class="detalle-contenedor" id="vista-articulo"></div>
+
+    </div>
+
+    <!-- PANEL VIDA ESTUDIANTIL: crear / editar -->
+    <div id="panel-vida-form" style="display:none;">
+
+      <div style="margin-bottom:16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+        <button class="btn-secundario" id="btn-cancelar-vida">← Volver</button>
+        <button class="btn-secundario btn-peligro" id="btn-eliminar-vida" style="display:none;">Eliminar publicación</button>
+      </div>
+
+      <section class="seccion">
+        <h2 class="seccion-titulo" id="titulo-vida-form">NUEVA PUBLICACIÓN</h2>
+
+        <form id="form-vida" class="formulario">
+
+          <div class="campo">
+            <label for="vida-titulo">Título</label>
+            <input type="text" id="vida-titulo" maxlength="200" required placeholder="Título del aviso o noticia">
+          </div>
+
+          <div class="campo">
+            <label for="vida-imagen">Imagen de portada</label>
+            <input type="file" id="vida-imagen" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+            <p id="ayuda-vida-imagen" class="campo-ayuda">Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px</p>
+            <p id="error-vida-imagen" class="campo-error"></p>
+            <div id="vida-previa-contenedor" style="display:none;">
+              <img id="vida-previa" src="" alt="Vista previa portada" style="max-height:160px; margin-top:8px; display:block;">
+              <button type="button" id="btn-quitar-vida-portada" class="btn-secundario" style="display:none; margin-top:8px; font-size:0.8rem; padding:5px 12px;">Quitar portada</button>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="vida-imagen2">Imagen del artículo <span style="font-weight:400; color:#888;">(opcional)</span></label>
+            <input type="file" id="vida-imagen2" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+            <p class="campo-ayuda">Máx 3 MB · JPG, PNG o WebP · Se muestra dentro del cuerpo del artículo.</p>
+            <p id="error-vida-imagen2" class="campo-error"></p>
+            <div id="vida-previa2-contenedor" style="display:none;">
+              <img id="vida-previa2" src="" alt="Vista previa" style="max-height:160px; margin-top:8px; display:block;">
+              <button type="button" id="btn-quitar-vida-imagen2" class="btn-secundario" style="display:none; margin-top:8px; font-size:0.8rem; padding:5px 12px;">Quitar imagen</button>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="vida-contenido">Texto</label>
+            <textarea id="vida-contenido" rows="14" maxlength="15000" required placeholder="Escribe aquí el contenido..."></textarea>
+          </div>
+
+          <div class="form-acciones">
+            <p class="form-estado" id="vida-form-estado"></p>
+            <button type="submit" class="btn-primario" id="btn-publicar-vida">Publicar</button>
+          </div>
+
+        </form>
+      </section>
 
     </div>
 
