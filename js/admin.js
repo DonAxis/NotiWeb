@@ -21,6 +21,7 @@ onAuthStateChanged(auth, async (usuario) => {
   }
 
   document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
+  cargarReporte();
   cargarPendientes();
   cargarUsuarios();
 });
@@ -30,6 +31,61 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
   await signOut(auth);
   window.location.href = "login.html";
 });
+
+// --- REPORTE DE ARTÍCULOS ---
+const NOMBRES_CATEGORIA = {
+  mundo:            "Mundo",
+  informatica:      "Informática",
+  gastronomia:      "Gastronomía",
+  ocio:             "Ocio",
+  vida_estudiantil: "Vida Estudiantil",
+};
+const ORDEN_CATEGORIAS = ["mundo", "informatica", "gastronomia", "ocio", "vida_estudiantil"];
+
+async function cargarReporte() {
+  try {
+    const snap = await getDocs(collection(db, "articulos"));
+
+    const conteo = { borrador: 0, aceptado: 0, publicado: 0, rechazado: 0, total: 0 };
+    const porCategoria = {};
+
+    snap.forEach(documento => {
+      const datos = documento.data();
+      conteo.total++;
+      if (datos.estado in conteo) conteo[datos.estado]++;
+      if (datos.estado === "publicado") {
+        const cat = datos.categoria || "otro";
+        porCategoria[cat] = (porCategoria[cat] || 0) + 1;
+      }
+    });
+
+    document.getElementById("stat-borrador").textContent  = conteo.borrador;
+    document.getElementById("stat-aceptado").textContent  = conteo.aceptado;
+    document.getElementById("stat-publicado").textContent = conteo.publicado;
+    document.getElementById("stat-rechazado").textContent = conteo.rechazado;
+    document.getElementById("stat-total").textContent     = conteo.total;
+
+    const contenedor = document.getElementById("stat-categorias");
+    contenedor.innerHTML = "";
+
+    if (Object.keys(porCategoria).length === 0) {
+      contenedor.innerHTML = "<p style='color:#888; font-size:0.85rem;'>Sin artículos publicados aún.</p>";
+      return;
+    }
+
+    const todas = [...ORDEN_CATEGORIAS, ...Object.keys(porCategoria).filter(c => !ORDEN_CATEGORIAS.includes(c))];
+    todas.forEach(cat => {
+      if (!porCategoria[cat]) return;
+      const card = document.createElement("div");
+      card.className = "stat-card";
+      card.innerHTML = `<p class="stat-numero">${porCategoria[cat]}</p><p class="stat-label">${NOMBRES_CATEGORIA[cat] || cat}</p>`;
+      contenedor.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error("Error al cargar reporte:", error);
+  }
+}
 
 // --- SOLICITUDES PENDIENTES ---
 async function cargarPendientes() {

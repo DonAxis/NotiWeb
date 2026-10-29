@@ -74,6 +74,40 @@
       margin-right: 6px;
       cursor: pointer;
     }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--gris-borde);
+      border-radius: 4px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .stat-numero {
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #777;
+    }
+    .stat-subtitulo {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #555;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -89,6 +123,39 @@
   </header>
 
   <main class="contenedor">
+
+    <!-- Reporte de artículos -->
+    <section class="seccion">
+      <h2 class="seccion-titulo">REPORTE DE ARTÍCULOS</h2>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <p class="stat-numero" id="stat-borrador">—</p>
+          <p class="stat-label">En revisión</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-numero" id="stat-aceptado" style="color:#2e7d32;">—</p>
+          <p class="stat-label">Aceptados</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-numero" id="stat-publicado" style="color:#1565c0;">—</p>
+          <p class="stat-label">Publicados</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-numero" id="stat-rechazado" style="color:var(--rojo);">—</p>
+          <p class="stat-label">Rechazados</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-numero" id="stat-total">—</p>
+          <p class="stat-label">Total</p>
+        </div>
+      </div>
+
+      <p class="stat-subtitulo">Publicados por categoría</p>
+      <div id="stat-categorias" class="stat-grid">
+        <p style="color:#888; font-size:0.85rem;">Cargando...</p>
+      </div>
+    </section>
 
     <!-- Solicitudes pendientes de aprobación -->
     <section class="seccion">
