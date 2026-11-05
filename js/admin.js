@@ -33,29 +33,21 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
 });
 
 // --- REPORTE DE ARTÍCULOS ---
-const NOMBRES_CATEGORIA = {
-  mundo:            "Mundo",
-  informatica:      "Informática",
-  gastronomia:      "Gastronomía",
-  ocio:             "Ocio",
-  vida_estudiantil: "Vida Estudiantil",
-};
-const ORDEN_CATEGORIAS = ["mundo", "informatica", "gastronomia", "ocio", "vida_estudiantil"];
-
 async function cargarReporte() {
   try {
     const snap = await getDocs(collection(db, "articulos"));
 
-    const conteo = { borrador: 0, aceptado: 0, publicado: 0, rechazado: 0, total: 0 };
-    const porCategoria = {};
+    const conteo    = { borrador: 0, aceptado: 0, publicado: 0, rechazado: 0, total: 0 };
+    const porAutor  = {}; // uid → { aceptado: N, publicado: N }
 
     snap.forEach(documento => {
       const datos = documento.data();
       conteo.total++;
       if (datos.estado in conteo) conteo[datos.estado]++;
-      if (datos.estado === "publicado") {
-        const cat = datos.categoria || "otro";
-        porCategoria[cat] = (porCategoria[cat] || 0) + 1;
+
+      if (datos.uid && (datos.estado === "aceptado" || datos.estado === "publicado")) {
+        if (!porAutor[datos.uid]) porAutor[datos.uid] = { aceptado: 0, publicado: 0 };
+        porAutor[datos.uid][datos.estado]++;
       }
     });
 
@@ -65,22 +57,47 @@ async function cargarReporte() {
     document.getElementById("stat-rechazado").textContent = conteo.rechazado;
     document.getElementById("stat-total").textContent     = conteo.total;
 
-    const contenedor = document.getElementById("stat-categorias");
-    contenedor.innerHTML = "";
+    const contenedor = document.getElementById("stat-autores");
+    const uids       = Object.keys(porAutor);
 
-    if (Object.keys(porCategoria).length === 0) {
-      contenedor.innerHTML = "<p style='color:#888; font-size:0.85rem;'>Sin artículos publicados aún.</p>";
+    if (uids.length === 0) {
+      contenedor.innerHTML = "<p style='color:#888; padding:16px; font-size:0.85rem;'>Sin artículos aceptados o publicados aún.</p>";
       return;
     }
 
-    const todas = [...ORDEN_CATEGORIAS, ...Object.keys(porCategoria).filter(c => !ORDEN_CATEGORIAS.includes(c))];
-    todas.forEach(cat => {
-      if (!porCategoria[cat]) return;
-      const card = document.createElement("div");
-      card.className = "stat-card";
-      card.innerHTML = `<p class="stat-numero">${porCategoria[cat]}</p><p class="stat-label">${NOMBRES_CATEGORIA[cat] || cat}</p>`;
-      contenedor.appendChild(card);
-    });
+    // Obtener nombres de los escritores en paralelo
+    const nombres = {};
+    await Promise.all(uids.map(async uid => {
+      try {
+        const docSnap = await getDoc(doc(db, "usuarios", uid));
+        nombres[uid] = docSnap.exists() ? (docSnap.data().nombre || uid) : uid;
+      } catch { nombres[uid] = uid; }
+    }));
+
+    // Ordenar por publicados desc, luego aceptados desc
+    const ordenados = uids.sort((a, b) =>
+      (porAutor[b].publicado - porAutor[a].publicado) ||
+      (porAutor[b].aceptado  - porAutor[a].aceptado)
+    );
+
+    const filas = ordenados.map(uid => `
+      <tr>
+        <td>${nombres[uid]}</td>
+        <td style="text-align:center;">${porAutor[uid].aceptado}</td>
+        <td style="text-align:center; color:#1565c0; font-weight:700;">${porAutor[uid].publicado}</td>
+      </tr>`).join("");
+
+    contenedor.innerHTML = `
+      <table class="tabla-usuarios">
+        <thead>
+          <tr>
+            <th>Autor</th>
+            <th style="text-align:center;">Aceptados</th>
+            <th style="text-align:center;">Publicados</th>
+          </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+      </table>`;
 
   } catch (error) {
     console.error("Error al cargar reporte:", error);
