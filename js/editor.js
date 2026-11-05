@@ -224,14 +224,14 @@ function abrirVista(id, datos, estado) {
     ${motivoHtml}
     <p class="art-categoria">${datos.categoria}</p>
     <h1 class="art-titulo">${datos.titulo}</h1>
-    <p class="art-meta">${fechaTexto}${estado === "aceptado" ? ' · Escrito por <span id="escritor-nombre">—</span>' : ""}</p>
+    <p class="art-meta">${fechaTexto}${(estado === "aceptado" || estado === "publicado") && datos.uid ? ' · Escrito por <span id="escritor-nombre">—</span>' : ""}</p>
     <img src="${datos.imagenURL}" alt="${datos.titulo}" class="art-imagen-principal">
     <div class="art-contenido">${parte1}</div>
     ${img2}
     <div class="art-contenido">${parte2}</div>
     ${img3}`;
 
-  if (estado === "aceptado" && datos.uid) {
+  if ((estado === "aceptado" || estado === "publicado") && datos.uid) {
     getDoc(doc(db, "usuarios", datos.uid)).then(snap => {
       const el = document.getElementById("escritor-nombre");
       if (el) el.textContent = snap.exists() ? (snap.data().nombre || datos.uid) : datos.uid;

@@ -124,6 +124,16 @@
           year: "numeric", month: "long", day: "numeric"
         }) ?? "";
 
+        let autorTexto = "";
+        if (a.uid) {
+          try {
+            const autorSnap = await getDoc(doc(db, "usuarios", a.uid));
+            if (autorSnap.exists()) {
+              autorTexto = ` · Escrito por ${autorSnap.data().nombre || ""}`;
+            }
+          } catch {}
+        }
+
         document.title = `${a.titulo} — Vigía Científico`;
 
         // Fuentes: una URL por línea
@@ -153,7 +163,7 @@
         contenedor.innerHTML = `
           <p class="art-categoria">${a.categoria}</p>
           <h1 class="art-titulo">${a.titulo}</h1>
-          <p class="art-meta">${fecha}</p>
+          <p class="art-meta">${fecha}${autorTexto}</p>
           <img src="${a.imagenURL}" alt="${a.titulo}" class="art-imagen-principal">
           <div class="art-contenido">${parte1}</div>
           ${img2}
