@@ -3,7 +3,8 @@ import { auth, db }                              from "./firebase.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, doc, setDoc, updateDoc,
          getDocs, deleteDoc, getDoc,
-         query, where }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         query, where, writeBatch,
+         Timestamp }                             from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -24,6 +25,7 @@ onAuthStateChanged(auth, async (usuario) => {
   cargarReporte();
   cargarPendientes();
   cargarUsuarios();
+  cargarVigias(usuario.uid);
 });
 
 // --- CERRAR SESIÓN ---
@@ -219,6 +221,103 @@ async function eliminarUsuario(uid, nombre) {
     cargarUsuarios();
   } catch (error) {
     alert("Error al eliminar. Intenta de nuevo.");
+    console.error(error);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIGÍAS — programas de ejecución única
+// Para agregar uno nuevo: añade un objeto al array VIGIAS_DEFINIDAS.
+// ─────────────────────────────────────────────────────────────
+
+const VIGIAS_DEFINIDAS = [
+  {
+    clave:       "v001-backfill-destacado",
+    nombre:      "V001 · Backfill destacado",
+    descripcion: "Pone destacado: false en todos los artículos que no tienen ese campo.",
+    tarea: async () => {
+      const snap = await getDocs(collection(db, "articulos"));
+      const batch = writeBatch(db);
+      let contador = 0;
+      snap.forEach(documento => {
+        if (documento.data().destacado === undefined) {
+          batch.update(doc(db, "articulos", documento.id), { destacado: false });
+          contador++;
+        }
+      });
+      if (contador > 0) await batch.commit();
+      return `${contador} artículo(s) actualizados.`;
+    }
+  },
+];
+
+async function cargarVigias(uidAdmin) {
+  const contenedor = document.getElementById("lista-vigias");
+  contenedor.innerHTML = "";
+
+  // Leer cuáles ya se ejecutaron
+  const ejecutados = {};
+  try {
+    const snap = await getDocs(collection(db, "vigias"));
+    snap.forEach(d => { ejecutados[d.id] = d.data(); });
+  } catch (error) {
+    console.error("Error al cargar vigías:", error);
+  }
+
+  VIGIAS_DEFINIDAS.forEach(vigia => {
+    const info = ejecutados[vigia.clave];
+    const hecho = !!info?.ejecutado;
+    const fecha = hecho
+      ? info.fechaEjecucion?.toDate().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" })
+      : null;
+
+    const card = document.createElement("div");
+    card.className = "vigia-card";
+    card.innerHTML = `
+      <div class="vigia-info">
+        <p class="vigia-nombre">${vigia.nombre}</p>
+        <p class="vigia-desc">${vigia.descripcion}</p>
+        ${hecho ? `<p class="vigia-fecha">✓ Ejecutado el ${fecha}</p>` : ""}
+      </div>
+      <button class="btn-vigia" data-clave="${vigia.clave}" ${hecho ? "disabled" : ""}>
+        ${hecho ? "Completado" : "Ejecutar"}
+      </button>`;
+
+    const btn = card.querySelector(".btn-vigia");
+    if (!hecho) {
+      btn.addEventListener("click", () => ejecutarVigia(vigia, btn, uidAdmin));
+    }
+
+    contenedor.appendChild(card);
+  });
+}
+
+async function ejecutarVigia(vigia, btn, uidAdmin) {
+  if (!confirm(`¿Ejecutar "${vigia.nombre}"?\n\n${vigia.descripcion}\n\nEsta acción no puede deshacerse.`)) return;
+
+  btn.disabled     = true;
+  btn.textContent  = "Ejecutando...";
+
+  try {
+    const resultado = await vigia.tarea();
+
+    await setDoc(doc(db, "vigias", vigia.clave), {
+      ejecutado:       true,
+      fechaEjecucion:  Timestamp.now(),
+      ejecutadoPor:    uidAdmin,
+      resultado:       resultado ?? "OK",
+    });
+
+    btn.textContent = "Completado";
+
+    const infoEl = btn.closest(".vigia-card").querySelector(".vigia-info");
+    const fecha  = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" });
+    infoEl.insertAdjacentHTML("beforeend", `<p class="vigia-fecha">✓ Ejecutado el ${fecha} — ${resultado ?? "OK"}</p>`);
+
+  } catch (error) {
+    btn.disabled    = false;
+    btn.textContent = "Ejecutar";
+    alert(`Error al ejecutar el vigía: ${error.message}`);
     console.error(error);
   }
 }
