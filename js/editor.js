@@ -5,19 +5,13 @@ import { collection, doc, updateDoc, getDocs,
          getDoc, query, where, orderBy, addDoc,
          deleteDoc, Timestamp }                  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
+import { escaparHTML, urlSegura, renderContenido,
+         nombreCategoria }                       from "./utilidades.js";
 
 const MAX_DESTACADOS  = 5;
 const LIMITE_PORTADA  = 3 * 1024 * 1024;
 const LIMITE_DOC      = 3 * 1024 * 1024;
 const MIN_W = 600, MIN_H = 400;
-
-function renderContenido(texto) {
-  return (texto || "")
-    .replace(/&/g,  "&amp;")
-    .replace(/</g,  "&lt;")
-    .replace(/>/g,  "&gt;")
-    .replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>");
-}
 
 let articuloActual    = null; // { id, datos, estado }
 let uidActual         = null;
@@ -162,10 +156,10 @@ function crearFila(id, datos, fecha, estado) {
     </button>` : "";
 
   fila.innerHTML = `
-    <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
-      <p class="articulo-fila-titulo">${datos.titulo}</p>
-      <p class="articulo-fila-meta">${datos.categoria} · ${fecha}</p>
+      <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
+      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}</p>
     </div>
     ${badges[estado] ?? ""}
     ${btnDestHTML}`;
@@ -200,8 +194,8 @@ function abrirVista(id, datos, estado) {
   const parte1   = renderContenido(parrafos.slice(0, mitad).join("\n\n"));
   const parte2   = renderContenido(parrafos.slice(mitad).join("\n\n"));
 
-  const img2 = datos.imagen2URL ? `<img src="${datos.imagen2URL}" alt="" class="art-imagen-extra">` : "";
-  const img3 = datos.imagen3URL ? `<img src="${datos.imagen3URL}" alt="" class="art-imagen-extra">` : "";
+  const img2 = urlSegura(datos.imagen2URL) ? `<img src="${urlSegura(datos.imagen2URL)}" alt="" class="art-imagen-extra">` : "";
+  const img3 = urlSegura(datos.imagen3URL) ? `<img src="${urlSegura(datos.imagen3URL)}" alt="" class="art-imagen-extra">` : "";
 
   let fechaTexto;
   if (estado === "publicado" && datos.fechaPublicacion) {
@@ -217,15 +211,15 @@ function abrirVista(id, datos, estado) {
   const motivoHtml = estado === "rechazado" && datos.motivoRechazo
     ? `<div class="aviso-rechazo-vista">
         <strong>Motivo del rechazo:</strong>
-        <span>${datos.motivoRechazo}</span>
+        <span>${escaparHTML(datos.motivoRechazo)}</span>
        </div>` : "";
 
   document.getElementById("vista-articulo").innerHTML = `
     ${motivoHtml}
-    <p class="art-categoria">${datos.categoria}</p>
-    <h1 class="art-titulo">${datos.titulo}</h1>
+    <p class="art-categoria">${escaparHTML(nombreCategoria(datos.categoria))}</p>
+    <h1 class="art-titulo">${escaparHTML(datos.titulo)}</h1>
     <p class="art-meta">${fechaTexto}${(estado === "aceptado" || estado === "publicado") && datos.uid ? ' · Escrito por <span id="escritor-nombre">—</span>' : ""}</p>
-    <img src="${datos.imagenURL}" alt="${datos.titulo}" class="art-imagen-principal">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="art-imagen-principal">
     <div class="art-contenido">${parte1}</div>
     ${img2}
     <div class="art-contenido">${parte2}</div>
@@ -517,9 +511,9 @@ function crearFilaVida(id, datos, fecha) {
   const fila = document.createElement("div");
   fila.className = "articulo-fila articulo-fila-clickable";
   fila.innerHTML = `
-    <img src="${datos.imagenURL || ""}" alt="${datos.titulo}" class="articulo-miniatura">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
-      <p class="articulo-fila-titulo">${datos.titulo}</p>
+      <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
       <p class="articulo-fila-meta">Vida estudiantil · ${fecha}</p>
     </div>
     <span class="estado-publicado">Publicado</span>`;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artículo — Vigía Científico</title>
+  <title>Artículo — Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
   <style>
     .articulo-pagina {
@@ -80,7 +80,7 @@
 
   <header class="encabezado">
     <div class="encabezado-contenido">
-      <a href="index.html" class="logo">VIGÍA<span> CIENTÍFICO</span></a>
+      <a href="index.html" class="logo">GACETA<span> ILB</span></a>
       <nav class="nav-principal">
         <a href="index.html">← Volver</a>
       </nav>
@@ -92,85 +92,84 @@
   </main>
 
   <footer class="pie">
-    <p>© 2026 Vigía Científico — Ciencia al alcance de todos</p>
+    <p>© 2026 Gaceta ILB — Instituto ILB</p>
   </footer>
 
   <script type="module">
-    import { db }           from "./js/firebase.js";
+    import { db }          from "./js/firebase.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-
-    function renderContenido(texto) {
-      return (texto || "")
-        .replace(/&/g,  "&amp;")
-        .replace(/</g,  "&lt;")
-        .replace(/>/g,  "&gt;")
-        .replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>");
-    }
+    import { escaparHTML, urlSegura, renderContenido, nombreCategoria } from "./js/utilidades.js";
 
     const params     = new URLSearchParams(window.location.search);
     const id         = params.get("id");
     const contenedor = document.getElementById("contenido-articulo");
 
+    const mostrarNoDisponible = () => {
+      contenedor.innerHTML = `<p class="art-error">Este artículo no está disponible.</p>`;
+    };
+
+    async function cargarArticulo() {
+      // Las reglas niegan la lectura de artículos inexistentes o no publicados:
+      // getDoc lanza permission-denied en vez de devolver vacío.
+      let snap;
+      try {
+        snap = await getDoc(doc(db, "articulos", id));
+      } catch (error) {
+        console.error(error);
+        mostrarNoDisponible();
+        return;
+      }
+
+      if (!snap.exists() || snap.data().estado !== "publicado") {
+        mostrarNoDisponible();
+        return;
+      }
+
+      const a     = snap.data();
+      const fecha = a.fechaPublicacion?.toDate().toLocaleDateString("es-MX", {
+        year: "numeric", month: "long", day: "numeric"
+      }) ?? "";
+
+      // autorNombre se guarda en el artículo porque el público no puede leer /usuarios
+      const autorTexto = a.autorNombre ? ` · Escrito por ${escaparHTML(a.autorNombre)}` : "";
+
+      document.title = `${a.titulo} — Gaceta ILB`;
+
+      let fuentesHTML = "";
+      if (a.fuente) {
+        const links = a.fuente.split("\n")
+          .map(urlSegura).filter(Boolean)
+          .map(url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`)
+          .join("");
+        if (links) fuentesHTML = `<div class="art-fuentes"><strong>Fuentes</strong>${links}</div>`;
+      }
+
+      const img2 = urlSegura(a.imagen2URL) ? `<img src="${urlSegura(a.imagen2URL)}" alt="" class="art-imagen-extra">` : "";
+      const img3 = urlSegura(a.imagen3URL) ? `<img src="${urlSegura(a.imagen3URL)}" alt="" class="art-imagen-extra">` : "";
+      const portada = urlSegura(a.imagenURL)
+        ? `<img src="${urlSegura(a.imagenURL)}" alt="${escaparHTML(a.titulo)}" class="art-imagen-principal">` : "";
+
+      const parrafos = (a.contenido || "").split("\n\n");
+      const mitad    = Math.ceil(parrafos.length / 2);
+      const parte1   = renderContenido(parrafos.slice(0, mitad).join("\n\n"));
+      const parte2   = renderContenido(parrafos.slice(mitad).join("\n\n"));
+
+      contenedor.innerHTML = `
+        <p class="art-categoria">${escaparHTML(nombreCategoria(a.categoria))}</p>
+        <h1 class="art-titulo">${escaparHTML(a.titulo)}</h1>
+        <p class="art-meta">${fecha}${autorTexto}</p>
+        ${portada}
+        <div class="art-contenido">${parte1}</div>
+        ${img2}
+        <div class="art-contenido">${parte2}</div>
+        ${img3}
+        ${fuentesHTML}`;
+    }
+
     if (!id) {
       contenedor.innerHTML = `<p class="art-error">Artículo no encontrado.</p>`;
     } else {
-      const snap = await getDoc(doc(db, "articulos", id));
-
-      if (!snap.exists() || snap.data().estado !== "publicado") {
-        contenedor.innerHTML = `<p class="art-error">Este artículo no está disponible.</p>`;
-      } else {
-        const a     = snap.data();
-        const fecha = a.fechaPublicacion?.toDate().toLocaleDateString("es-MX", {
-          year: "numeric", month: "long", day: "numeric"
-        }) ?? "";
-
-        let autorTexto = "";
-        if (a.uid) {
-          try {
-            const autorSnap = await getDoc(doc(db, "usuarios", a.uid));
-            if (autorSnap.exists()) {
-              autorTexto = ` · Escrito por ${autorSnap.data().nombre || ""}`;
-            }
-          } catch {}
-        }
-
-        document.title = `${a.titulo} — Vigía Científico`;
-
-        // Fuentes: una URL por línea
-        let fuentesHTML = "";
-        if (a.fuente) {
-          const links = a.fuente.split("\n")
-            .map(l => l.trim()).filter(Boolean)
-            .map(url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`)
-            .join("");
-          fuentesHTML = `<div class="art-fuentes"><strong>Fuentes científicas</strong>${links}</div>`;
-        }
-
-        // Imagen 2 a la mitad, imagen 3 al final
-        const img2 = a.imagen2URL
-          ? `<img src="${a.imagen2URL}" alt="" class="art-imagen-extra">`
-          : "";
-        const img3 = a.imagen3URL
-          ? `<img src="${a.imagen3URL}" alt="" class="art-imagen-extra">`
-          : "";
-
-        // Partir el contenido en dos mitades para intercalar imagen 2
-        const parrafos = a.contenido.split("\n\n");
-        const mitad    = Math.ceil(parrafos.length / 2);
-        const parte1   = renderContenido(parrafos.slice(0, mitad).join("\n\n"));
-        const parte2   = renderContenido(parrafos.slice(mitad).join("\n\n"));
-
-        contenedor.innerHTML = `
-          <p class="art-categoria">${a.categoria}</p>
-          <h1 class="art-titulo">${a.titulo}</h1>
-          <p class="art-meta">${fecha}${autorTexto}</p>
-          <img src="${a.imagenURL}" alt="${a.titulo}" class="art-imagen-principal">
-          <div class="art-contenido">${parte1}</div>
-          ${img2}
-          <div class="art-contenido">${parte2}</div>
-          ${img3}
-          ${fuentesHTML}`;
-      }
+      cargarArticulo();
     }
   </script>
 

@@ -2,6 +2,13 @@
 import { db } from "./firebase.js";
 import { collection, query, where, orderBy, limit, getDocs }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { escaparHTML } from "./utilidades.js";
+
+// style.backgroundImage no decodifica entidades HTML: aquí la URL va cruda, solo http(s) y sin comillas
+const fondo = (url) => {
+  const u = String(url ?? "").trim();
+  return /^https?:\/\//i.test(u) && !/["\\\n]/.test(u) ? `url("${u}")` : "";
+};
 
 // --- ÚLTIMAS NOTICIAS (primeros 5 publicados) ---
 async function cargarUltimasNoticias() {
@@ -18,7 +25,7 @@ async function cargarUltimasNoticias() {
 
     if (articulos[0]) {
       const el = document.getElementById("articulo-destacado");
-      el.style.backgroundImage = `url(${articulos[0].imagenURL})`;
+      el.style.backgroundImage = fondo(articulos[0].imagenURL);
       el.querySelector(".articulo-titulo").textContent = articulos[0].titulo;
       el.style.cursor = "pointer";
       el.addEventListener("click", () => {
@@ -29,7 +36,7 @@ async function cargarUltimasNoticias() {
     const secundarios = document.getElementById("grid-secundario").querySelectorAll(".articulo");
     articulos.slice(1).forEach((a, i) => {
       if (!secundarios[i]) return;
-      secundarios[i].style.backgroundImage = `url(${a.imagenURL})`;
+      secundarios[i].style.backgroundImage = fondo(a.imagenURL);
       secundarios[i].querySelector(".articulo-titulo").textContent = a.titulo;
       secundarios[i].style.cursor = "pointer";
       secundarios[i].addEventListener("click", () => {
@@ -59,7 +66,7 @@ async function cargarVidaEstudiantil() {
     const tarjetas = document.getElementById("grid-vida").querySelectorAll(".articulo");
     articulos.forEach((a, i) => {
       if (!tarjetas[i]) return;
-      tarjetas[i].style.backgroundImage = `url(${a.imagenURL})`;
+      tarjetas[i].style.backgroundImage = fondo(a.imagenURL);
       tarjetas[i].querySelector(".articulo-titulo").textContent = a.titulo;
       tarjetas[i].style.cursor = "pointer";
       tarjetas[i].addEventListener("click", () => {
@@ -68,7 +75,7 @@ async function cargarVidaEstudiantil() {
     });
 
   } catch (error) {
-    console.error("Error al cargar sección ciencia:", error);
+    console.error("Error al cargar vida estudiantil:", error);
   }
 }
 
@@ -99,9 +106,9 @@ async function cargarCarrusel(categoria) {
       const a = { _id: documento.id, ...documento.data() };
       const tarjeta = document.createElement("div");
       tarjeta.className = "tarjeta";
-      tarjeta.style.backgroundImage = `url(${a.imagenURL})`;
+      tarjeta.style.backgroundImage = fondo(a.imagenURL);
       tarjeta.style.cursor = "pointer";
-      tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${a.titulo}</p></div>`;
+      tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${escaparHTML(a.titulo)}</p></div>`;
       tarjeta.addEventListener("click", () => {
         window.location.href = `articulo.html?id=${a._id}`;
       });
@@ -109,6 +116,7 @@ async function cargarCarrusel(categoria) {
     });
 
   } catch (error) {
+    carrusel.innerHTML = "<p style='padding:1rem;color:#555'>No se pudieron cargar los artículos.</p>";
     console.error("Error al cargar carrusel:", error);
   }
 }
@@ -181,8 +189,8 @@ async function cargarArticulosExplorar(filtros, nombre) {
       const a = { _id: documento.id, ...documento.data() };
       const tarjeta = document.createElement("article");
       tarjeta.className = "articulo mundo-tarjeta";
-      tarjeta.style.backgroundImage = `url(${a.imagenURL})`;
-      tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${a.titulo}</p></div>`;
+      tarjeta.style.backgroundImage = fondo(a.imagenURL);
+      tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${escaparHTML(a.titulo)}</p></div>`;
       tarjeta.addEventListener("click", () => {
         window.location.href = `articulo.html?id=${a._id}`;
       });

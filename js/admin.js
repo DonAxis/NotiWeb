@@ -5,6 +5,7 @@ import { collection, doc, setDoc, updateDoc,
          getDocs, deleteDoc, getDoc,
          query, where, writeBatch,
          Timestamp }                             from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { escaparHTML }                           from "./utilidades.js";
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -84,7 +85,7 @@ async function cargarReporte() {
 
     const filas = ordenados.map(uid => `
       <tr>
-        <td>${nombres[uid]}</td>
+        <td>${escaparHTML(nombres[uid])}</td>
         <td style="text-align:center;">${porAutor[uid].aceptado}</td>
         <td style="text-align:center; color:#1565c0; font-weight:700;">${porAutor[uid].publicado}</td>
       </tr>`).join("");
@@ -126,15 +127,15 @@ async function cargarPendientes() {
       const uid = documento.id;
       tbody.innerHTML += `
         <tr>
-          <td>${nombre ?? "—"}</td>
-          <td>${correo ?? "—"}</td>
+          <td>${escaparHTML(nombre ?? "—")}</td>
+          <td>${escaparHTML(correo ?? "—")}</td>
           <td>
-            <select class="sel-rol" data-uid="${uid}">
+            <select class="sel-rol" data-uid="${escaparHTML(uid)}">
               <option value="escritor">Escritor</option>
               <option value="editor">Editor</option>
             </select>
-            <button class="btn-aprobar"  data-uid="${uid}" data-nombre="${nombre}">Aprobar</button>
-            <button class="btn-eliminar" data-uid="${uid}" data-nombre="${nombre}">Rechazar</button>
+            <button class="btn-aprobar"  data-uid="${escaparHTML(uid)}" data-nombre="${escaparHTML(nombre)}">Aprobar</button>
+            <button class="btn-eliminar" data-uid="${escaparHTML(uid)}" data-nombre="${escaparHTML(nombre)}">Rechazar</button>
           </td>
         </tr>`;
     });
@@ -187,14 +188,14 @@ async function cargarUsuarios() {
 
       // No mostrar botón de eliminar para admin
       const accion = rol !== "admin"
-        ? `<button class="btn-eliminar" data-uid="${uid}" data-nombre="${nombre}">Eliminar</button>`
+        ? `<button class="btn-eliminar" data-uid="${escaparHTML(uid)}" data-nombre="${escaparHTML(nombre)}">Eliminar</button>`
         : `<span style="color:#aaa; font-size:0.75rem;">—</span>`;
 
       tbody.innerHTML += `
         <tr>
-          <td>${nombre ?? "—"}</td>
-          <td>${correo ?? "—"}</td>
-          <td><span class="badge-rol badge-${rol}">${rol}</span></td>
+          <td>${escaparHTML(nombre ?? "—")}</td>
+          <td>${escaparHTML(correo ?? "—")}</td>
+          <td><span class="badge-rol badge-${escaparHTML(rol)}">${escaparHTML(rol)}</span></td>
           <td>${accion}</td>
         </tr>`;
     });
@@ -245,6 +246,30 @@ const VIGIAS_DEFINIDAS = [
           contador++;
         }
       });
+      if (contador > 0) await batch.commit();
+      return `${contador} artículo(s) actualizados.`;
+    }
+  },
+  {
+    clave:       "v002-backfill-autor",
+    nombre:      "V002 · Backfill nombre de autor",
+    descripcion: "Copia el nombre del escritor a autorNombre en los artículos que no lo tienen (para mostrar el autor al público).",
+    tarea: async () => {
+      const snap    = await getDocs(collection(db, "articulos"));
+      const nombres = {};
+      const batch   = writeBatch(db);
+      let contador  = 0;
+      for (const documento of snap.docs) {
+        const { uid, autorNombre } = documento.data();
+        if (!uid || autorNombre) continue;
+        if (!(uid in nombres)) {
+          const u = await getDoc(doc(db, "usuarios", uid));
+          nombres[uid] = u.exists() ? (u.data().nombre || "") : "";
+        }
+        if (!nombres[uid]) continue;
+        batch.update(doc(db, "articulos", documento.id), { autorNombre: nombres[uid] });
+        contador++;
+      }
       if (contador > 0) await batch.commit();
       return `${contador} artículo(s) actualizados.`;
     }

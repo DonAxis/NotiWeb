@@ -5,6 +5,7 @@ import { collection, addDoc, updateDoc, query,
          where, getDocs, getDoc,
          doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
+import { escaparHTML, urlSegura, nombreCategoria }  from "./utilidades.js";
 
 // Reglas de Firebase Storage requeridas en la consola:
 // match /articulos/{uid}/{allPaths=**} {
@@ -23,6 +24,7 @@ const SUBCATEGORIAS = {
 };
 
 let uidActual         = null;
+let nombreActual      = "";
 let articuloEnEdicion = null; // null = nuevo · { id, datos, estado } = edición
 let quitarPortada     = false;
 let quitarImagen2     = false;
@@ -79,8 +81,9 @@ onAuthStateChanged(auth, async (usuario) => {
     return;
   }
 
-  uidActual = usuario.uid;
-  document.getElementById("nombre-usuario").textContent = usuario.displayName || usuario.email;
+  uidActual    = usuario.uid;
+  nombreActual = snap.data().nombre || "";
+  document.getElementById("nombre-usuario").textContent = nombreActual || usuario.email;
   cargarArticulos();
 });
 
@@ -164,7 +167,7 @@ function crearFila(id, datos) {
   fila.className = "articulo-fila";
 
   const motivoHtml = estado === "rechazado" && datos.motivoRechazo
-    ? `<p class="motivo-rechazo-texto">"${datos.motivoRechazo}"</p>` : "";
+    ? `<p class="motivo-rechazo-texto">"${escaparHTML(datos.motivoRechazo)}"</p>` : "";
 
   const editable = estado === "borrador" || estado === "rechazado";
   const btnLabel = estado === "rechazado" ? "Editar y reenviar" : "Editar";
@@ -174,10 +177,10 @@ function crearFila(id, datos) {
     : "";
 
   fila.innerHTML = `
-    <img src="${datos.imagenURL}" alt="${datos.titulo}" class="articulo-miniatura">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
-      <p class="articulo-fila-titulo">${datos.titulo}</p>
-      <p class="articulo-fila-meta">${datos.categoria} · ${fecha}</p>
+      <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
+      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}</p>
       ${motivoHtml}
     </div>
     ${badges[estado] ?? ""}
@@ -468,7 +471,8 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
         categoria,
         subcategoria,
         continente,
-        uid:         uidActual
+        uid:         uidActual,
+        autorNombre: nombreActual
       });
 
       estadoTexto.style.color = "green";
@@ -483,6 +487,7 @@ document.getElementById("form-articulo").addEventListener("submit", async (e) =>
         subcategoria,
         continente,
         contenido,
+        autorNombre: nombreActual,
         estado: "borrador",
         ...(archivo  ? { imagenURL }        : quitarPortada  ? { imagenURL: null }  : {}),
         ...(archivo2 ? { imagen2URL }       : quitarImagen2  ? { imagen2URL: null } : {}),

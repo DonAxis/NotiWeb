@@ -252,7 +252,7 @@
 
       try {
         await sendPasswordResetEmail(auth, correoReset, {
-          url: window.location.origin + "/NotiWeb/login.html"
+          url: window.location.origin + "/login.html"
         });
         okMsg.style.display = "block";
       } catch (error) {
