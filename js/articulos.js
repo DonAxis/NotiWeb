@@ -34,6 +34,7 @@ async function cargarUltimasNoticias() {
     }
 
     const secundarios = document.getElementById("grid-secundario").querySelectorAll(".articulo");
+    secundarios.forEach((t, i) => { if (i >= articulos.length - 1) t.style.display = "none"; });
     articulos.slice(1).forEach((a, i) => {
       if (!secundarios[i]) return;
       secundarios[i].style.backgroundImage = fondo(a.imagenURL);
@@ -63,7 +64,15 @@ async function cargarVidaEstudiantil() {
     const articulos = [];
     snap.forEach(doc => articulos.push({ _id: doc.id, ...doc.data() }));
 
-    const tarjetas = document.getElementById("grid-vida").querySelectorAll(".articulo");
+    const grid     = document.getElementById("grid-vida");
+    const tarjetas = grid.querySelectorAll(".articulo");
+
+    if (articulos.length === 0) {
+      grid.innerHTML = "<p class='mundo-vacio'>Próximamente publicaciones de vida estudiantil.</p>";
+      return;
+    }
+    tarjetas.forEach((t, i) => { if (i >= articulos.length) t.style.display = "none"; });
+
     articulos.forEach((a, i) => {
       if (!tarjetas[i]) return;
       tarjetas[i].style.backgroundImage = fondo(a.imagenURL);
@@ -80,30 +89,51 @@ async function cargarVidaEstudiantil() {
 }
 
 // --- CARRUSEL por categoría ---
+let peticionCarrusel = 0;
+
 async function cargarCarrusel(categoria) {
   const carrusel = document.getElementById("carrusel");
+  const miPeticion = ++peticionCarrusel;
   carrusel.innerHTML = "";
 
-  const categoriaFirestore = categoria;
+  const MAX_CARRUSEL = 10;
 
   try {
-    const q = query(
+    const destacados = await getDocs(query(
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
-      where("categoria", "==", categoriaFirestore),
+      where("categoria", "==", categoria),
       where("destacado", "==", true),
       orderBy("fechaPublicacion", "desc"),
-      limit(10)
-    );
-    const snap = await getDocs(q);
+      limit(MAX_CARRUSEL)
+    ));
 
-    if (snap.empty) {
+    const articulos = destacados.docs.map(d => ({ _id: d.id, ...d.data() }));
+
+    // Los destacados van primero; si no alcanzan, se completa con los más recientes
+    if (articulos.length < MAX_CARRUSEL) {
+      const recientes = await getDocs(query(
+        collection(db, "articulos"),
+        where("estado", "==", "publicado"),
+        where("categoria", "==", categoria),
+        orderBy("fechaPublicacion", "desc"),
+        limit(MAX_CARRUSEL)
+      ));
+      const ids = new Set(articulos.map(a => a._id));
+      recientes.forEach(d => {
+        if (articulos.length < MAX_CARRUSEL && !ids.has(d.id)) articulos.push({ _id: d.id, ...d.data() });
+      });
+    }
+
+    // Si el usuario ya cambió de pestaña, no pintar resultados viejos
+    if (miPeticion !== peticionCarrusel) return;
+
+    if (articulos.length === 0) {
       carrusel.innerHTML = "<p style='padding:1rem;color:#555'>Sin artículos en esta categoría.</p>";
       return;
     }
 
-    snap.forEach(documento => {
-      const a = { _id: documento.id, ...documento.data() };
+    articulos.forEach(a => {
       const tarjeta = document.createElement("div");
       tarjeta.className = "tarjeta";
       tarjeta.style.backgroundImage = fondo(a.imagenURL);
@@ -116,6 +146,7 @@ async function cargarCarrusel(categoria) {
     });
 
   } catch (error) {
+    if (miPeticion !== peticionCarrusel) return;
     carrusel.innerHTML = "<p style='padding:1rem;color:#555'>No se pudieron cargar los artículos.</p>";
     console.error("Error al cargar carrusel:", error);
   }
