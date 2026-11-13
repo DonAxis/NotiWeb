@@ -274,6 +274,26 @@ const VIGIAS_DEFINIDAS = [
       return `${contador} artículo(s) actualizados.`;
     }
   },
+  {
+    clave:       "v003-archivar-categorias-obsoletas",
+    nombre:      "V003 · Archivar artículos de categorías obsoletas",
+    descripcion: "Pasa a estado \"archivado\" los publicados cuya categoría ya no existe (p. ej. el artículo \"Prueba\" de \"tecnologia\"). Dejan de verse en el portal.",
+    tarea: async () => {
+      const VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "vida_estudiantil"];
+      const snap    = await getDocs(query(collection(db, "articulos"), where("estado", "==", "publicado")));
+      const batch   = writeBatch(db);
+      const titulos = [];
+      snap.forEach(documento => {
+        const { categoria, titulo } = documento.data();
+        if (!VALIDAS.includes(categoria)) {
+          batch.update(doc(db, "articulos", documento.id), { estado: "archivado", destacado: false });
+          titulos.push(titulo);
+        }
+      });
+      if (titulos.length > 0) await batch.commit();
+      return `${titulos.length} archivado(s)${titulos.length ? ": " + titulos.join(", ") : ""}.`;
+    }
+  },
 ];
 
 async function cargarVigias(uidAdmin) {
@@ -337,7 +357,7 @@ async function ejecutarVigia(vigia, btn, uidAdmin) {
 
     const infoEl = btn.closest(".vigia-card").querySelector(".vigia-info");
     const fecha  = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" });
-    infoEl.insertAdjacentHTML("beforeend", `<p class="vigia-fecha">✓ Ejecutado el ${fecha} — ${resultado ?? "OK"}</p>`);
+    infoEl.insertAdjacentHTML("beforeend", `<p class="vigia-fecha">✓ Ejecutado el ${fecha} — ${escaparHTML(resultado ?? "OK")}</p>`);
 
   } catch (error) {
     btn.disabled    = false;
