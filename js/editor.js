@@ -7,6 +7,7 @@ import { collection, doc, updateDoc, getDocs,
 import { ref, uploadBytes, getDownloadURL }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, renderContenido,
          nombreCategoria }                       from "./utilidades.js";
+import { pintarLecturas }                        from "./interacciones.js";
 
 const MAX_DESTACADOS  = 5;
 const LIMITE_PORTADA  = 3 * 1024 * 1024;
@@ -116,6 +117,7 @@ async function cargarPublicados(categoria) {
       orderBy("fechaPublicacion", "desc")
     ));
     renderLista(lista, snap, "publicado", "Sin artículos publicados en esta categoría.");
+    pintarLecturas(lista);
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
@@ -159,7 +161,7 @@ function crearFila(id, datos, fecha, estado) {
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
-      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}</p>
+      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>
     </div>
     ${badges[estado] ?? ""}
     ${btnDestHTML}`;
@@ -218,12 +220,13 @@ function abrirVista(id, datos, estado) {
     ${motivoHtml}
     <p class="art-categoria">${escaparHTML(nombreCategoria(datos.categoria))}</p>
     <h1 class="art-titulo">${escaparHTML(datos.titulo)}</h1>
-    <p class="art-meta">${fechaTexto}${(estado === "aceptado" || estado === "publicado") && datos.uid ? ' · Escrito por <span id="escritor-nombre">—</span>' : ""}</p>
+    <p class="art-meta">${fechaTexto}${(estado === "aceptado" || estado === "publicado") && datos.uid ? ' · Escrito por <span id="escritor-nombre">—</span>' : ""}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="art-imagen-principal">
     <div class="art-contenido">${parte1}</div>
     ${img2}
     <div class="art-contenido">${parte2}</div>
     ${img3}`;
+  pintarLecturas(document.getElementById("vista-articulo"));
 
   if ((estado === "aceptado" || estado === "publicado") && datos.uid) {
     getDoc(doc(db, "usuarios", datos.uid)).then(snap => {
@@ -501,6 +504,7 @@ async function cargarVidaEstudiantil() {
       const fecha = datos.fechaPublicacion?.toDate().toLocaleDateString("es-MX") ?? "—";
       lista.appendChild(crearFilaVida(documento.id, datos, fecha));
     });
+    pintarLecturas(lista);
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
@@ -514,7 +518,7 @@ function crearFilaVida(id, datos, fecha) {
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
-      <p class="articulo-fila-meta">Vida estudiantil · ${fecha}</p>
+      <p class="articulo-fila-meta">Vida estudiantil · ${fecha}<span data-lecturas="${escaparHTML(id)}"></span></p>
     </div>
     <span class="estado-publicado">Publicado</span>`;
   fila.addEventListener("click", () => abrirFormVida(id, datos));

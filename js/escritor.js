@@ -6,6 +6,7 @@ import { collection, addDoc, updateDoc, query,
          doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, nombreCategoria }  from "./utilidades.js";
+import { pintarLecturas }                         from "./interacciones.js";
 
 // Reglas de Firebase Storage requeridas en la consola:
 // match /articulos/{uid}/{allPaths=**} {
@@ -141,6 +142,7 @@ async function cargarArticulos() {
       listaHist.innerHTML = "";
       historial.forEach(({ id, datos }) => listaHist.appendChild(crearFila(id, datos)));
       secHist.style.display = "block";
+      pintarLecturas(listaHist);
     } else {
       secHist.style.display = "none";
     }
@@ -180,7 +182,7 @@ function crearFila(id, datos) {
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
-      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}</p>
+      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>
       ${motivoHtml}
     </div>
     ${badges[estado] ?? ""}

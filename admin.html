@@ -40,6 +40,7 @@
     .badge-editor    { background: #e8f5e9; color: #2e7d32; }
     .badge-admin     { background: #fce4ec; color: #b71c1c; }
     .badge-pendiente { background: #fff8e1; color: #e65100; }
+    .badge-bloqueado { background: #eeeeee; color: #616161; }
     .btn-aprobar {
       background: none;
       border: 1px solid #c8e6c9;
@@ -185,6 +186,11 @@
           <p class="stat-numero" id="stat-total">—</p>
           <p class="stat-label">Total</p>
         </div>
+      </div>
+
+      <p class="stat-subtitulo">Más leídas</p>
+      <div id="stat-leidas" style="background:#fff; border-radius:4px; overflow:auto; margin-bottom:20px;">
+        <p style="color:#888; padding:16px; font-size:0.85rem;">Cargando...</p>
       </div>
 
       <p class="stat-subtitulo">Artículos por autor</p>

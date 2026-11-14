@@ -38,19 +38,32 @@ document.getElementById("btn-salir").addEventListener("click", async () => {
 // --- REPORTE DE ARTÍCULOS ---
 async function cargarReporte() {
   try {
-    const snap = await getDocs(collection(db, "articulos"));
+    const [snap, snapLect] = await Promise.all([
+      getDocs(collection(db, "articulos")),
+      // Si las reglas de /lecturas aún no están publicadas, el reporte sigue funcionando sin ellas
+      getDocs(collection(db, "lecturas")).catch(error => {
+        console.warn("Sin acceso a lecturas:", error.code ?? error);
+        return null;
+      }),
+    ]);
+
+    const lecturas = {};          // idArticulo → N
+    snapLect?.forEach(d => { lecturas[d.id] = d.data().lecturas ?? 0; });
+    const titulos  = {};          // idArticulo → { titulo, autor }
 
     const conteo    = { borrador: 0, aceptado: 0, publicado: 0, rechazado: 0, total: 0 };
     const porAutor  = {}; // uid → { aceptado: N, publicado: N }
 
     snap.forEach(documento => {
       const datos = documento.data();
+      titulos[documento.id] = { titulo: datos.titulo, autor: datos.autorNombre };
       conteo.total++;
       if (datos.estado in conteo) conteo[datos.estado]++;
 
       if (datos.uid && (datos.estado === "aceptado" || datos.estado === "publicado")) {
-        if (!porAutor[datos.uid]) porAutor[datos.uid] = { aceptado: 0, publicado: 0 };
+        if (!porAutor[datos.uid]) porAutor[datos.uid] = { aceptado: 0, publicado: 0, lecturas: 0 };
         porAutor[datos.uid][datos.estado]++;
+        porAutor[datos.uid].lecturas += lecturas[documento.id] ?? 0;
       }
     });
 
@@ -59,6 +72,8 @@ async function cargarReporte() {
     document.getElementById("stat-publicado").textContent = conteo.publicado;
     document.getElementById("stat-rechazado").textContent = conteo.rechazado;
     document.getElementById("stat-total").textContent     = conteo.total;
+
+    pintarMasLeidas(lecturas, titulos);
 
     const contenedor = document.getElementById("stat-autores");
     const uids       = Object.keys(porAutor);
@@ -88,6 +103,7 @@ async function cargarReporte() {
         <td>${escaparHTML(nombres[uid])}</td>
         <td style="text-align:center;">${porAutor[uid].aceptado}</td>
         <td style="text-align:center; color:#1565c0; font-weight:700;">${porAutor[uid].publicado}</td>
+        <td style="text-align:center;">${porAutor[uid].lecturas}</td>
       </tr>`).join("");
 
     contenedor.innerHTML = `
@@ -97,6 +113,7 @@ async function cargarReporte() {
             <th>Autor</th>
             <th style="text-align:center;">Aceptados</th>
             <th style="text-align:center;">Publicados</th>
+            <th style="text-align:center;">👁 Lecturas</th>
           </tr>
         </thead>
         <tbody>${filas}</tbody>
@@ -105,6 +122,35 @@ async function cargarReporte() {
   } catch (error) {
     console.error("Error al cargar reporte:", error);
   }
+}
+
+function pintarMasLeidas(lecturas, titulos) {
+  const contenedor = document.getElementById("stat-leidas");
+  const top = Object.entries(lecturas)
+    .filter(([id]) => titulos[id])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  if (top.length === 0) {
+    contenedor.innerHTML = "<p style='color:#888; padding:16px; font-size:0.85rem;'>Aún no hay lecturas registradas.</p>";
+    return;
+  }
+
+  const filas = top.map(([id, n], i) => `
+    <tr>
+      <td style="text-align:center; color:#888;">${i + 1}</td>
+      <td><a href="articulo.html?id=${encodeURIComponent(id)}" target="_blank" rel="noopener" style="color:inherit;">${escaparHTML(titulos[id].titulo)}</a></td>
+      <td>${escaparHTML(titulos[id].autor ?? "—")}</td>
+      <td style="text-align:center; font-weight:700;">${n}</td>
+    </tr>`).join("");
+
+  contenedor.innerHTML = `
+    <table class="tabla-usuarios">
+      <thead>
+        <tr><th style="text-align:center;">#</th><th>Noticia</th><th>Autor</th><th style="text-align:center;">👁</th></tr>
+      </thead>
+      <tbody>${filas}</tbody>
+    </table>`;
 }
 
 // --- SOLICITUDES PENDIENTES ---
@@ -147,7 +193,7 @@ async function cargarPendientes() {
       });
     });
     tbody.querySelectorAll(".btn-eliminar").forEach(btn =>
-      btn.addEventListener("click", () => eliminarUsuario(btn.dataset.uid, btn.dataset.nombre))
+      btn.addEventListener("click", () => bloquearUsuario(btn.dataset.uid, btn.dataset.nombre))
     );
 
   } catch (error) {
@@ -186,10 +232,11 @@ async function cargarUsuarios() {
       const { nombre, correo, rol } = documento.data();
       const uid = documento.id;
 
-      // No mostrar botón de eliminar para admin
-      const accion = rol !== "admin"
-        ? `<button class="btn-eliminar" data-uid="${escaparHTML(uid)}" data-nombre="${escaparHTML(nombre)}">Eliminar</button>`
-        : `<span style="color:#aaa; font-size:0.75rem;">—</span>`;
+      const accion = rol === "admin"
+        ? `<span style="color:#aaa; font-size:0.75rem;">—</span>`
+        : rol === "bloqueado"
+          ? `<button class="btn-aprobar btn-desbloquear" data-uid="${escaparHTML(uid)}" data-nombre="${escaparHTML(nombre)}">Desbloquear</button>`
+          : `<button class="btn-eliminar" data-uid="${escaparHTML(uid)}" data-nombre="${escaparHTML(nombre)}">Bloquear</button>`;
 
       tbody.innerHTML += `
         <tr>
@@ -200,9 +247,11 @@ async function cargarUsuarios() {
         </tr>`;
     });
 
-    // Eventos de eliminar
     tbody.querySelectorAll(".btn-eliminar").forEach((btn) => {
-      btn.addEventListener("click", () => eliminarUsuario(btn.dataset.uid, btn.dataset.nombre));
+      btn.addEventListener("click", () => bloquearUsuario(btn.dataset.uid, btn.dataset.nombre));
+    });
+    tbody.querySelectorAll(".btn-desbloquear").forEach((btn) => {
+      btn.addEventListener("click", () => desbloquearUsuario(btn.dataset.uid, btn.dataset.nombre));
     });
 
   } catch (error) {
@@ -211,17 +260,31 @@ async function cargarUsuarios() {
   }
 }
 
-// --- ELIMINAR USUARIO ---
-// Solo elimina el documento de Firestore (el rol).
-// El usuario sigue existiendo en Firebase Auth pero no puede entrar al portal.
-async function eliminarUsuario(uid, nombre) {
-  if (!confirm(`¿Eliminar acceso de "${nombre}"? No podrá entrar al portal.`)) return;
+// --- BLOQUEAR USUARIO ---
+// No se borra el doc: si se borrara, el usuario (que sigue en Firebase Auth)
+// podría recrearlo con el auto-registro y volver a pedir acceso.
+async function bloquearUsuario(uid, nombre) {
+  if (!confirm(`¿Bloquear a "${nombre}"? No podrá entrar al portal ni volver a solicitar acceso.`)) return;
 
   try {
-    await deleteDoc(doc(db, "usuarios", uid));
+    await updateDoc(doc(db, "usuarios", uid), { rol: "bloqueado" });
+    cargarPendientes();
     cargarUsuarios();
   } catch (error) {
-    alert("Error al eliminar. Intenta de nuevo.");
+    alert("Error al bloquear. Intenta de nuevo.");
+    console.error(error);
+  }
+}
+
+async function desbloquearUsuario(uid, nombre) {
+  if (!confirm(`¿Desbloquear a "${nombre}"? Volverá a "Solicitudes pendientes" para que elijas su rol.`)) return;
+
+  try {
+    await updateDoc(doc(db, "usuarios", uid), { rol: "pendiente" });
+    cargarPendientes();
+    cargarUsuarios();
+  } catch (error) {
+    alert("Error al desbloquear. Intenta de nuevo.");
     console.error(error);
   }
 }

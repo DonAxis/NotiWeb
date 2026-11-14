@@ -69,6 +69,61 @@
       word-break: break-all;
       margin-bottom: 4px;
     }
+    .reacciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .reacciones-arriba {
+      margin-bottom: 20px;
+    }
+    .reacciones-final {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px solid var(--gris-borde);
+    }
+    .reacciones-pregunta {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .reaccion {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 6px 14px;
+      border: 1px solid var(--gris-borde);
+      border-radius: 999px;
+      background: var(--blanco);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .reaccion:active {
+      transform: scale(0.94);
+    }
+    .reaccion-emoji {
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+    .reaccion-num {
+      font-weight: 700;
+      color: #555;
+      min-width: 0.5em;
+    }
+    .reaccion-num:empty {
+      display: none;
+    }
+    .reaccion-activa {
+      background: #f8eef1;
+      border-color: var(--rojo);
+    }
+    .reaccion-activa .reaccion-num {
+      color: var(--rojo);
+    }
     .art-error {
       text-align: center;
       padding: 60px 16px;
@@ -99,6 +154,7 @@
     import { db }          from "./js/firebase.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
     import { escaparHTML, urlSegura, renderContenido, nombreCategoria } from "./js/utilidades.js";
+    import { registrarLectura, montarReacciones } from "./js/interacciones.js";
 
     const params     = new URLSearchParams(window.location.search);
     const id         = params.get("id");
@@ -158,12 +214,20 @@
         <p class="art-categoria">${escaparHTML(nombreCategoria(a.categoria))}</p>
         <h1 class="art-titulo">${escaparHTML(a.titulo)}</h1>
         <p class="art-meta">${fecha}${autorTexto}</p>
+        <div class="reacciones reacciones-arriba"></div>
         ${portada}
         <div class="art-contenido">${parte1}</div>
         ${img2}
         <div class="art-contenido">${parte2}</div>
         ${img3}
-        ${fuentesHTML}`;
+        ${fuentesHTML}
+        <div class="reacciones-final">
+          <p class="reacciones-pregunta">¿Qué te pareció?</p>
+          <div class="reacciones"></div>
+        </div>`;
+
+      montarReacciones(id, a.categoria, contenedor.querySelectorAll(".reacciones"));
+      registrarLectura(id, a.uid);
     }
 
     if (!id) {

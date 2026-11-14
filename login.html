@@ -212,6 +212,9 @@
         } else if (rolUsuario === "pendiente") {
           await auth.signOut();
           mostrarError("Tu solicitud aún no ha sido aprobada. El equipo editorial te avisará cuando tengas acceso.");
+        } else if (rolUsuario === "bloqueado") {
+          await auth.signOut();
+          mostrarError("Tu cuenta no tiene acceso al portal. Contacta al administrador.");
         } else {
           await auth.signOut();
           mostrarError("Rol no reconocido. Contacta al administrador.");
