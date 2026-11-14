@@ -370,6 +370,12 @@ a {
   height: auto;
 }
 
+/* La capa de continentes cubre SOLO la imagen (no el texto de instrucción de abajo);
+   el SVG usa las coordenadas en píxeles de la imagen (viewBox 0 0 1600 791) */
+.mapa-lienzo {
+  position: relative;
+}
+
 /* El SVG flota sobre la imagen */
 .mapa-overlay {
   position: absolute;
@@ -387,6 +393,7 @@ a {
 .continente path {
   fill: transparent;
   stroke: transparent;
+  vector-effect: non-scaling-stroke;
   transition: fill 0.18s, stroke 0.18s;
 }
 
@@ -406,7 +413,7 @@ a {
 
 .continente text {
   fill: #ffffff;
-  font-size: 18px;
+  font-size: 29px;
   font-family: 'Segoe UI', Arial, sans-serif;
   font-weight: 700;
   pointer-events: none;
@@ -729,6 +736,6 @@ a {
   }
 
   .continente text {
-    font-size: 14px;
+    font-size: 40px;
   }
 }
