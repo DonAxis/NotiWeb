@@ -80,27 +80,6 @@ a {
 }
 
 /* =====================
-   AVISO EN CONSTRUCCIÓN
-   ===================== */
-.aviso-construccion {
-  background-color: var(--rojo);
-  color: var(--blanco);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 16px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.aviso-icono {
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-
-/* =====================
    CONTENEDOR PRINCIPAL
    ===================== */
 .contenedor {
@@ -165,25 +144,33 @@ a {
   background-repeat: no-repeat;
 }
 
-/* Gradiente oscuro sobre la imagen */
+/* Gradiente oscuro sobre la imagen: más denso abajo para que el título blanco
+   se lea aunque la imagen sea clara o tenga texto propio */
 .articulo-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.15) 65%, transparent 100%);
   display: flex;
   align-items: flex-end;
   padding: 12px;
 }
 
+/* Máximo 3 líneas: los títulos largos se cortan con "…" en vez de tapar la imagen */
 .articulo-titulo {
   color: var(--blanco);
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.3;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .articulo-grande .articulo-titulo {
-  font-size: 1rem;
+  font-size: 1.15rem;
+  -webkit-line-clamp: 2;
 }
 
 /* Zoom sutil al hover */
@@ -197,7 +184,7 @@ a {
 }
 
 .articulo:hover .articulo-overlay {
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.75) 35%, rgba(0,0,0,0.25) 70%, transparent 100%);
 }
 
 /* =====================
@@ -249,80 +236,121 @@ a {
   color: var(--blanco);
 }
 
-/* Carrusel */
+/* Carrusel: se desliza con el dedo (scroll-snap); las flechas son solo para escritorio */
 .carrusel-contenedor {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: relative;
 }
 
 .carrusel {
   display: flex;
-  gap: 12px;
-  overflow: hidden;
-  flex: 1;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-bottom: 4px;
 }
 
-/* position: relative es obligatorio: el .articulo-overlay interno es absolute
-   y sin esto se estira sobre toda la página */
+.carrusel::-webkit-scrollbar {
+  display: none;
+}
+
+.carrusel-vacio {
+  padding: 1rem;
+  color: #555;
+}
+
+/* Tarjeta: imagen arriba, texto sobre blanco abajo (el título nunca se pierde contra la imagen) */
 .tarjeta {
-  flex: 0 0 calc(33.33% - 8px);
+  flex: 0 0 calc((100% - 3 * 14px) / 4);
   min-width: 0;
-  position: relative;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: 6px;
   overflow: hidden;
-  height: 180px;
-  cursor: pointer;
-  background-color: #ccc;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.tarjeta:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .tarjeta-imagen {
-  height: 160px;
-  margin-bottom: 8px;
+  aspect-ratio: 16 / 10;
+  background-color: #ddd;
+  background-size: cover;
+  background-position: center;
+}
+
+.tarjeta-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  flex: 1;
+}
+
+.tarjeta-categoria {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rojo);
 }
 
 .tarjeta-titulo {
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.3;
-  margin-bottom: 6px;
-  /* Limitar a 2 líneas */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.tarjeta-desc {
-  font-size: 0.78rem;
-  color: #555;
-  line-height: 1.4;
+  color: var(--texto-oscuro);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+.tarjeta-fecha {
+  margin-top: auto;
+  font-size: 0.72rem;
+  color: #888;
+}
+
 .carrusel-btn {
+  position: absolute;
+  top: calc(50% - 18px);
+  z-index: 1;
   background-color: var(--texto-oscuro);
   color: var(--blanco);
   border: none;
-  width: 32px;
-  height: 32px;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
   font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.2s, opacity 0.2s;
 }
+
+.carrusel-prev { left: -12px; }
+.carrusel-next { right: -12px; }
 
 .carrusel-btn:hover {
   background-color: var(--rojo);
+}
+
+.carrusel-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* =====================
@@ -612,11 +640,7 @@ a {
   }
 
   .tarjeta {
-    flex: 0 0 calc(50% - 6px);
-  }
-
-  .tarjeta-imagen {
-    height: 120px;
+    flex: 0 0 calc((100% - 2 * 14px) / 3);
   }
 }
 
@@ -651,7 +675,16 @@ a {
   .grid-secundario {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
-    height: 200px;
+    height: 260px;
+  }
+
+  /* Tarjetas pequeñas en celular: letra menor para que quepan 3 líneas con aire */
+  .grid-secundario .articulo-titulo {
+    font-size: 0.78rem;
+  }
+
+  .articulo-grande .articulo-titulo {
+    font-size: 1rem;
   }
 
   /* Grid dos columnas: apila verticalmente */
@@ -664,14 +697,13 @@ a {
     height: 180px;
   }
 
-  /* Carrusel: 1 tarjeta a la vez */
+  /* Carrusel en celular: se desliza con el dedo; se asoma la siguiente tarjeta para invitar a deslizar */
   .tarjeta {
-    flex: 0 0 100%;
-    height: 200px;
+    flex: 0 0 72%;
   }
 
-  .tarjeta-imagen {
-    height: 140px;
+  .carrusel-btn {
+    display: none;
   }
 
   /* Tabs: scroll horizontal si no caben */

@@ -22,12 +22,6 @@
     </div>
   </header>
 
-  <!-- AVISO EN CONSTRUCCIÓN — quitar cuando haya noticias publicadas -->
-  <div class="aviso-construccion">
-    <span class="aviso-icono">🔧</span>
-    <p>Sitio en construcción &mdash; La Gaceta se lanzará pronto.</p>
-  </div>
-
   <main class="contenedor">
 
     <!-- SECCIÓN: ÚLTIMAS NOTICIAS -->
@@ -61,16 +55,9 @@
     </section>
 
     <!-- SECCIÓN: TE PUEDE INTERESAR -->
-    <!-- Las tarjetas se insertan dinámicamente desde Firestore via articulos.js -->
+    <!-- Tarjetas al azar (sin repetir ÚLTIMAS NOTICIAS), insertadas por articulos.js -->
     <section class="seccion interesar">
       <h3 class="interesar-titulo">Te puede interesar...</h3>
-
-      <div class="tabs">
-        <button class="tab activo" data-categoria="mundo">MUNDO</button>
-        <button class="tab" data-categoria="informatica">INFORMÁTICA</button>
-        <button class="tab" data-categoria="gastronomia">GASTRONOMÍA</button>
-        <button class="tab" data-categoria="ocio">OCIO</button>
-      </div>
 
       <div class="carrusel-contenedor">
         <button class="carrusel-btn carrusel-prev" aria-label="Anterior">&#8249;</button>

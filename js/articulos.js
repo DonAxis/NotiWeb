@@ -1,8 +1,8 @@
-// articulos.js — carga artículos desde Firestore y maneja carrusel/tabs
+// articulos.js — portada: últimas noticias, vida estudiantil, te puede interesar y explorar
 import { db } from "./firebase.js";
 import { collection, query, where, orderBy, limit, getDocs }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-import { escaparHTML } from "./utilidades.js";
+import { escaparHTML, nombreCategoria } from "./utilidades.js";
 
 // style.backgroundImage no decodifica entidades HTML: aquí la URL va cruda, solo http(s) y sin comillas
 const fondo = (url) => {
@@ -10,44 +10,49 @@ const fondo = (url) => {
   return /^https?:\/\//i.test(u) && !/["\\\n]/.test(u) ? `url("${u}")` : "";
 };
 
-// --- ÚLTIMAS NOTICIAS (primeros 5 publicados) ---
-async function cargarUltimasNoticias() {
+const NUM_ULTIMAS   = 5;
+const MAX_INTERESAR = 8;
+const CATEGORIAS_VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "vida_estudiantil"];
+
+// --- PORTADA: una sola consulta alimenta ÚLTIMAS NOTICIAS y TE PUEDE INTERESAR ---
+async function cargarPortada() {
   try {
-    const q = query(
+    const snap = await getDocs(query(
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
       orderBy("fechaPublicacion", "desc"),
-      limit(5)
-    );
-    const snap = await getDocs(q);
-    const articulos = [];
-    snap.forEach(doc => articulos.push({ _id: doc.id, ...doc.data() }));
-
-    if (articulos[0]) {
-      const el = document.getElementById("articulo-destacado");
-      el.style.backgroundImage = fondo(articulos[0].imagenURL);
-      el.querySelector(".articulo-titulo").textContent = articulos[0].titulo;
-      el.style.cursor = "pointer";
-      el.addEventListener("click", () => {
-        window.location.href = `articulo.html?id=${articulos[0]._id}`;
-      });
-    }
-
-    const secundarios = document.getElementById("grid-secundario").querySelectorAll(".articulo");
-    secundarios.forEach((t, i) => { if (i >= articulos.length - 1) t.style.display = "none"; });
-    articulos.slice(1).forEach((a, i) => {
-      if (!secundarios[i]) return;
-      secundarios[i].style.backgroundImage = fondo(a.imagenURL);
-      secundarios[i].querySelector(".articulo-titulo").textContent = a.titulo;
-      secundarios[i].style.cursor = "pointer";
-      secundarios[i].addEventListener("click", () => {
-        window.location.href = `articulo.html?id=${a._id}`;
-      });
-    });
-
+      limit(60)
+    ));
+    const todos = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    pintarUltimas(todos.slice(0, NUM_ULTIMAS));
+    pintarInteresar(todos.slice(NUM_ULTIMAS));
   } catch (error) {
-    console.error("Error al cargar últimas noticias:", error);
+    console.error("Error al cargar la portada:", error);
+    document.getElementById("carrusel").innerHTML =
+      "<p class='carrusel-vacio'>No se pudieron cargar los artículos.</p>";
   }
+}
+
+function pintarUltimas(articulos) {
+  if (articulos[0]) {
+    const el = document.getElementById("articulo-destacado");
+    el.style.backgroundImage = fondo(articulos[0].imagenURL);
+    el.querySelector(".articulo-titulo").textContent = articulos[0].titulo;
+    el.addEventListener("click", () => {
+      window.location.href = `articulo.html?id=${articulos[0]._id}`;
+    });
+  }
+
+  const secundarios = document.getElementById("grid-secundario").querySelectorAll(".articulo");
+  secundarios.forEach((t, i) => { if (i >= articulos.length - 1) t.style.display = "none"; });
+  articulos.slice(1).forEach((a, i) => {
+    if (!secundarios[i]) return;
+    secundarios[i].style.backgroundImage = fondo(a.imagenURL);
+    secundarios[i].querySelector(".articulo-titulo").textContent = a.titulo;
+    secundarios[i].addEventListener("click", () => {
+      window.location.href = `articulo.html?id=${a._id}`;
+    });
+  });
 }
 
 // --- VIDA ESTUDIANTIL (3 más recientes) ---
@@ -90,93 +95,73 @@ async function cargarVidaEstudiantil() {
   }
 }
 
-// --- CARRUSEL por categoría ---
-let peticionCarrusel = 0;
-
-async function cargarCarrusel(categoria) {
-  const carrusel = document.getElementById("carrusel");
-  const miPeticion = ++peticionCarrusel;
-  carrusel.innerHTML = "";
-
-  const MAX_CARRUSEL = 10;
-
-  try {
-    const destacados = await getDocs(query(
-      collection(db, "articulos"),
-      where("estado", "==", "publicado"),
-      where("categoria", "==", categoria),
-      where("destacado", "==", true),
-      orderBy("fechaPublicacion", "desc"),
-      limit(MAX_CARRUSEL)
-    ));
-
-    const articulos = destacados.docs.map(d => ({ _id: d.id, ...d.data() }));
-
-    // Los destacados van primero; si no alcanzan, se completa con los más recientes
-    if (articulos.length < MAX_CARRUSEL) {
-      const recientes = await getDocs(query(
-        collection(db, "articulos"),
-        where("estado", "==", "publicado"),
-        where("categoria", "==", categoria),
-        orderBy("fechaPublicacion", "desc"),
-        limit(MAX_CARRUSEL)
-      ));
-      const ids = new Set(articulos.map(a => a._id));
-      recientes.forEach(d => {
-        if (articulos.length < MAX_CARRUSEL && !ids.has(d.id)) articulos.push({ _id: d.id, ...d.data() });
-      });
-    }
-
-    // Si el usuario ya cambió de pestaña, no pintar resultados viejos
-    if (miPeticion !== peticionCarrusel) return;
-
-    if (articulos.length === 0) {
-      carrusel.innerHTML = "<p style='padding:1rem;color:#555'>Sin artículos en esta categoría.</p>";
-      return;
-    }
-
-    articulos.forEach(a => {
-      const tarjeta = document.createElement("div");
-      tarjeta.className = "tarjeta";
-      tarjeta.style.backgroundImage = fondo(a.imagenURL);
-      tarjeta.style.cursor = "pointer";
-      tarjeta.innerHTML = `<div class="articulo-overlay"><p class="articulo-titulo">${escaparHTML(a.titulo)}</p></div>`;
-      tarjeta.addEventListener("click", () => {
-        window.location.href = `articulo.html?id=${a._id}`;
-      });
-      carrusel.appendChild(tarjeta);
-    });
-
-  } catch (error) {
-    if (miPeticion !== peticionCarrusel) return;
-    carrusel.innerHTML = "<p style='padding:1rem;color:#555'>No se pudieron cargar los artículos.</p>";
-    console.error("Error al cargar carrusel:", error);
+// --- TE PUEDE INTERESAR: al azar, sin repetir las últimas noticias ---
+function barajar(lista) {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
   }
+  return copia;
 }
 
-// --- NAVEGACIÓN DEL CARRUSEL ---
-const carruselEl = document.querySelector(".carrusel");
+function pintarInteresar(candidatos) {
+  const carrusel = document.getElementById("carrusel");
+
+  // Solo categorías vigentes (evita artículos viejos como "Prueba"/tecnologia)
+  const validos = candidatos.filter(a => CATEGORIAS_VALIDAS.includes(a.categoria));
+
+  // Los destacados por el editor entran primero (también en orden aleatorio)
+  const destacados = barajar(validos.filter(a => a.destacado));
+  const resto      = barajar(validos.filter(a => !a.destacado));
+  const elegidos   = [...destacados, ...resto].slice(0, MAX_INTERESAR);
+
+  if (elegidos.length === 0) {
+    document.querySelector(".interesar").style.display = "none";
+    return;
+  }
+
+  carrusel.innerHTML = "";
+  elegidos.forEach(a => {
+    const fecha = a.fechaPublicacion?.toDate().toLocaleDateString("es-MX", {
+      day: "numeric", month: "short", year: "numeric"
+    }) ?? "";
+    const tarjeta = document.createElement("a");
+    tarjeta.className = "tarjeta";
+    tarjeta.href      = `articulo.html?id=${encodeURIComponent(a._id)}`;
+    tarjeta.innerHTML = `
+      <div class="tarjeta-imagen"></div>
+      <div class="tarjeta-cuerpo">
+        <span class="tarjeta-categoria">${escaparHTML(nombreCategoria(a.categoria))}</span>
+        <p class="tarjeta-titulo">${escaparHTML(a.titulo)}</p>
+        <span class="tarjeta-fecha">${escaparHTML(fecha)}</span>
+      </div>`;
+    tarjeta.querySelector(".tarjeta-imagen").style.backgroundImage = fondo(a.imagenURL);
+    carrusel.appendChild(tarjeta);
+  });
+
+  actualizarFlechas();
+}
+
+// --- NAVEGACIÓN DEL CARRUSEL (flechas solo en pantallas grandes; en celular se desliza) ---
+const carruselEl = document.getElementById("carrusel");
 const btnPrev    = document.querySelector(".carrusel-prev");
 const btnNext    = document.querySelector(".carrusel-next");
 
-if (carruselEl && btnPrev && btnNext) {
-  const anchoPaso = () => {
-    const tarjeta = carruselEl.querySelector(".tarjeta");
-    return tarjeta ? tarjeta.offsetWidth + 12 : 200;
-  };
-  btnNext.addEventListener("click", () => carruselEl.scrollBy({ left:  anchoPaso(), behavior: "smooth" }));
-  btnPrev.addEventListener("click", () => carruselEl.scrollBy({ left: -anchoPaso(), behavior: "smooth" }));
+function actualizarFlechas() {
+  const max = carruselEl.scrollWidth - carruselEl.clientWidth;
+  btnPrev.disabled = carruselEl.scrollLeft <= 4;
+  btnNext.disabled = carruselEl.scrollLeft >= max - 4;
 }
 
-// --- TABS ---
-const tabs = document.querySelectorAll(".tab");
-tabs.forEach(tab => {
-  tab.addEventListener("click", () => {
-    tabs.forEach(t => t.classList.remove("activo"));
-    tab.classList.add("activo");
-    cargarCarrusel(tab.dataset.categoria);
-  });
-});
+const anchoPaso = () => {
+  const tarjeta = carruselEl.querySelector(".tarjeta");
+  return tarjeta ? tarjeta.offsetWidth + 14 : 240;
+};
+btnNext.addEventListener("click", () => carruselEl.scrollBy({ left:  anchoPaso(), behavior: "smooth" }));
+btnPrev.addEventListener("click", () => carruselEl.scrollBy({ left: -anchoPaso(), behavior: "smooth" }));
+carruselEl.addEventListener("scroll", actualizarFlechas, { passive: true });
+window.addEventListener("resize", actualizarFlechas);
 
 // --- EXPLORAR: panel compartido de resultados ---
 const explorarResultados = document.getElementById("explorar-resultados");
@@ -308,7 +293,5 @@ document.querySelectorAll(".explorar-tab").forEach(tab => {
 });
 
 // --- INICIALIZAR ---
-const tabActivo = document.querySelector(".tab.activo");
-cargarUltimasNoticias();
+cargarPortada();
 cargarVidaEstudiantil();
-cargarCarrusel(tabActivo ? tabActivo.dataset.categoria : "mundo");
