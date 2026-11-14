@@ -342,7 +342,7 @@ const VIGIAS_DEFINIDAS = [
     nombre:      "V003 · Archivar artículos de categorías obsoletas",
     descripcion: "Pasa a estado \"archivado\" los publicados cuya categoría ya no existe (p. ej. el artículo \"Prueba\" de \"tecnologia\"). Dejan de verse en el portal.",
     tarea: async () => {
-      const VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "vida_estudiantil"];
+      const VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "geochisme", "vida_estudiantil"];
       const snap    = await getDocs(query(collection(db, "articulos"), where("estado", "==", "publicado")));
       const batch   = writeBatch(db);
       const titulos = [];

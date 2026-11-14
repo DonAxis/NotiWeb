@@ -12,7 +12,7 @@ const fondo = (url) => {
 
 const NUM_ULTIMAS   = 5;
 const MAX_INTERESAR = 8;
-const CATEGORIAS_VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "vida_estudiantil"];
+const CATEGORIAS_VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "geochisme", "vida_estudiantil"];
 
 // --- PORTADA: una sola consulta alimenta ÚLTIMAS NOTICIAS y TE PUEDE INTERESAR ---
 async function cargarPortada() {
@@ -228,7 +228,8 @@ document.querySelectorAll(".continente").forEach(g => {
     g.classList.add("activo");
     elementoActivo = g;
     cargarArticulosExplorar(
-      { categoria: "mundo", continente: g.dataset.continente },
+      // El mismo mapa sirve para MUNDO y GEOCHISME: la categoría viene del panel
+      { categoria: g.closest(".explorar-panel").dataset.categoria, continente: g.dataset.continente },
       g.dataset.nombre
     );
   };

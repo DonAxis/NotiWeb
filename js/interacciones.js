@@ -12,10 +12,11 @@ export const REACCIONES = {
   me_divierte:   { emoji: "😂", texto: "Me divierte" },
 };
 
-// 😂 solo en humor: evita risas en noticias trágicas. Para la futura categoría de humor:
-//   <slug>: ["me_gusta", "me_encanta", "me_sorprende", "me_divierte"],
+// 😂 solo en humor (geochisme): evita risas en noticias trágicas
 const REACCIONES_BASE = ["me_gusta", "me_encanta", "me_sorprende", "me_entristece"];
-const REACCIONES_POR_CATEGORIA = {};
+const REACCIONES_POR_CATEGORIA = {
+  geochisme: ["me_gusta", "me_encanta", "me_sorprende", "me_divierte"],
+};
 
 export function reaccionesDe(categoria) {
   return REACCIONES_POR_CATEGORIA[categoria] ?? REACCIONES_BASE;

@@ -6,12 +6,13 @@ import { collection, doc, updateDoc, getDocs,
          deleteDoc, Timestamp }                  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, renderContenido,
-         nombreCategoria }                       from "./utilidades.js";
+         nombreCategoria, optimizarImagen }      from "./utilidades.js";
 import { pintarLecturas }                        from "./interacciones.js";
 
 const MAX_DESTACADOS  = 5;
-const LIMITE_PORTADA  = 3 * 1024 * 1024;
-const LIMITE_DOC      = 3 * 1024 * 1024;
+// Límite del archivo elegido; antes de subir se optimiza con optimizarImagen()
+const LIMITE_PORTADA  = 15 * 1024 * 1024;
+const LIMITE_DOC      = 15 * 1024 * 1024;
 const MIN_W = 600, MIN_H = 400;
 
 let articuloActual    = null; // { id, datos, estado }
@@ -561,7 +562,7 @@ function abrirFormVida(id, datos) {
     document.getElementById("btn-quitar-vida-imagen2").style.display   = "none";
   }
 
-  document.getElementById("ayuda-vida-imagen").textContent      = "Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px · Deja vacío para conservar la imagen actual.";
+  document.getElementById("ayuda-vida-imagen").textContent      = "JPG, PNG o WebP · Mín 600 × 400 px · Se optimiza automáticamente · Deja vacío para conservar la imagen actual.";
   document.getElementById("titulo-vida-form").textContent       = "EDITAR PUBLICACIÓN";
   document.getElementById("btn-publicar-vida").textContent      = "Guardar cambios";
   document.getElementById("btn-eliminar-vida").style.display    = "inline-block";
@@ -587,7 +588,7 @@ document.getElementById("btn-nueva-vida").addEventListener("click", () => {
   document.getElementById("btn-quitar-vida-imagen2").style.display   = "none";
   document.getElementById("error-vida-imagen").style.display         = "none";
   document.getElementById("error-vida-imagen2").style.display        = "none";
-  document.getElementById("ayuda-vida-imagen").textContent           = "Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px";
+  document.getElementById("ayuda-vida-imagen").textContent           = "Obligatoria · JPG, PNG o WebP · Mín 600 × 400 px · Se optimiza automáticamente";
   document.getElementById("titulo-vida-form").textContent            = "NUEVA PUBLICACIÓN";
   document.getElementById("btn-publicar-vida").textContent           = "Publicar";
   document.getElementById("btn-eliminar-vida").style.display         = "none";
@@ -611,7 +612,7 @@ async function validarImagen(archivo, limite, checkDims) {
   }
   const mb = (limite / 1024 / 1024).toFixed(0);
   if (archivo.size > limite) {
-    return `La imagen no puede superar ${mb} MB. Puedes comprimirla en squoosh.app`;
+    return `La imagen no puede superar ${mb} MB.`;
   }
   if (!checkDims) return null;
   return new Promise((resolve) => {
@@ -675,7 +676,8 @@ document.getElementById("btn-quitar-vida-imagen2").addEventListener("click", () 
   document.getElementById("btn-quitar-vida-imagen2").style.display  = "none";
 });
 
-async function subirImagenVida(archivo) {
+async function subirImagenVida(original) {
+  const archivo    = await optimizarImagen(original);
   const ruta       = `articulos/${uidActual}/${Date.now()}_${archivo.name}`;
   const storageRef = ref(storage, ruta);
   await uploadBytes(storageRef, archivo);

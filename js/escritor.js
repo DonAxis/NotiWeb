@@ -5,7 +5,8 @@ import { collection, addDoc, updateDoc, query,
          where, getDocs, getDoc,
          doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
-import { escaparHTML, urlSegura, nombreCategoria }  from "./utilidades.js";
+import { escaparHTML, urlSegura, nombreCategoria,
+         optimizarImagen }                          from "./utilidades.js";
 import { pintarLecturas }                         from "./interacciones.js";
 
 // Reglas de Firebase Storage requeridas en la consola:
@@ -14,8 +15,10 @@ import { pintarLecturas }                         from "./interacciones.js";
 //   allow read:  if true;
 // }
 
-const LIMITE_PORTADA = 3 * 1024 * 1024; // 3 MB
-const LIMITE_DOC     = 3 * 1024 * 1024; // 3 MB
+// Límite del archivo que elige el escritor (foto de celular tal cual);
+// antes de subir se reduce a ~100–400 KB con optimizarImagen()
+const LIMITE_PORTADA = 15 * 1024 * 1024; // 15 MB
+const LIMITE_DOC     = 15 * 1024 * 1024; // 15 MB
 const MIN_W = 600, MIN_H = 400;
 
 const SUBCATEGORIAS = {
@@ -37,7 +40,8 @@ function actualizarCamposSecundarios(categoria, valorSub = "", valorCont = "") {
   const selSub    = document.getElementById("subcategoria");
   const selCont   = document.getElementById("continente");
 
-  if (categoria === "mundo") {
+  // Geochisme usa el mismo mapa de continentes que Mundo
+  if (categoria === "mundo" || categoria === "geochisme") {
     campoCont.style.display = "block";
     campoSub.style.display  = "none";
     selCont.required = true;
@@ -226,7 +230,7 @@ function abrirFormEdicion(id, datos) {
   }
 
   document.getElementById("ayuda-portada").textContent =
-    "Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px · Deja vacío para conservar la imagen actual.";
+    "JPG, PNG o WebP · Mín 600 × 400 px · Se optimiza automáticamente · Deja vacío para conservar la imagen actual.";
 
   const esRechazado = datos.estado === "rechazado";
   document.getElementById("aviso-rechazo").style.display  = esRechazado ? "block" : "none";
@@ -265,7 +269,7 @@ document.getElementById("btn-nuevo-articulo").addEventListener("click", () => {
   document.getElementById("aviso-revision").style.display           = "none";
   document.getElementById("error-imagen").style.display             = "none";
   document.getElementById("error-imagen2").style.display            = "none";
-  document.getElementById("ayuda-portada").textContent              = "Obligatoria · Máx 3 MB · JPG, PNG o WebP · Mín 600 × 400 px";
+  document.getElementById("ayuda-portada").textContent              = "Obligatoria · JPG, PNG o WebP · Mín 600 × 400 px · Se optimiza automáticamente";
   actualizarCamposSecundarios("");
   document.getElementById("titulo-form").textContent               = "NUEVO ARTÍCULO";
   document.getElementById("btn-enviar").textContent                = "Enviar a revisión";
@@ -297,7 +301,7 @@ async function validarImagen(archivo, limite, checkDims = false) {
   }
   const mb = (limite / 1024 / 1024).toFixed(0);
   if (archivo.size > limite) {
-    return `La imagen no puede superar ${mb} MB. Puedes comprimirla en squoosh.app`;
+    return `La imagen no puede superar ${mb} MB.`;
   }
   if (!checkDims) return null;
   return new Promise((resolve) => {
@@ -366,7 +370,8 @@ document.getElementById("btn-quitar-imagen2").addEventListener("click", () => {
 });
 
 // --- SUBIR IMAGEN A FIREBASE STORAGE ---
-async function subirImagen(archivo) {
+async function subirImagen(original) {
+  const archivo    = await optimizarImagen(original);
   const ruta       = `articulos/${uidActual}/${Date.now()}_${archivo.name}`;
   const storageRef = ref(storage, ruta);
   await uploadBytes(storageRef, archivo);
