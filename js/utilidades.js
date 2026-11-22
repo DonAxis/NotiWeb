@@ -27,7 +27,7 @@ const NOMBRES_CATEGORIA = {
   gastronomia:      "Gastronomía",
   ocio:             "Ocio",
   geochisme:        "Geochisme",
-  vida_estudiantil: "Vida estudiantil",
+  vida_estudiantil: "Territorio estudiantil",
 };
 
 export function nombreCategoria(cat) {

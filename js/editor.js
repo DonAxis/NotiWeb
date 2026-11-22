@@ -496,7 +496,7 @@ async function cargarVidaEstudiantil() {
       orderBy("fechaPublicacion", "desc")
     ));
     if (snap.empty) {
-      lista.innerHTML = "<p class='lista-vacia'>Sin publicaciones de vida estudiantil.</p>";
+      lista.innerHTML = "<p class='lista-vacia'>Sin publicaciones de Territorio estudiantil.</p>";
       return;
     }
     lista.innerHTML = "";
@@ -519,7 +519,7 @@ function crearFilaVida(id, datos, fecha) {
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
-      <p class="articulo-fila-meta">Vida estudiantil · ${fecha}<span data-lecturas="${escaparHTML(id)}"></span></p>
+      <p class="articulo-fila-meta">Territorio estudiantil · ${fecha}<span data-lecturas="${escaparHTML(id)}"></span></p>
     </div>
     <span class="estado-publicado">Publicado</span>`;
   fila.addEventListener("click", () => abrirFormVida(id, datos));
@@ -565,7 +565,8 @@ function abrirFormVida(id, datos) {
   document.getElementById("ayuda-vida-imagen").textContent      = "JPG, PNG o WebP · Mín 600 × 400 px · Se optimiza automáticamente · Deja vacío para conservar la imagen actual.";
   document.getElementById("titulo-vida-form").textContent       = "EDITAR PUBLICACIÓN";
   document.getElementById("btn-publicar-vida").textContent      = "Guardar cambios";
-  document.getElementById("btn-eliminar-vida").style.display    = "inline-block";
+  // Solo se eliminan las del editor; las de escritores conservan su autoría y flujo
+  document.getElementById("btn-eliminar-vida").style.display    = datos.uid ? "none" : "inline-block";
   document.getElementById("vida-form-estado").textContent       = "";
 
   mostrarPanelVida();

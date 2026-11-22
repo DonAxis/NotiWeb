@@ -75,7 +75,7 @@ async function cargarVidaEstudiantil() {
     if (articulos.length === 0) {
       grid.style.display = "block";
       grid.style.height  = "auto";
-      grid.innerHTML = "<p class='mundo-vacio' style='height:auto; padding:24px 0;'>Próximamente publicaciones de vida estudiantil.</p>";
+      grid.innerHTML = "<p class='mundo-vacio' style='height:auto; padding:24px 0;'>Próximamente publicaciones de Territorio estudiantil.</p>";
       return;
     }
     tarjetas.forEach((t, i) => { if (i >= articulos.length) t.style.display = "none"; });
