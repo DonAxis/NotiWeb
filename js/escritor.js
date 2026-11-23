@@ -1,9 +1,11 @@
 // escritor.js — panel del escritor (múltiples estados, Firebase Storage)
-import { auth, db, storage }                         from "./firebase.js";
+import { db }                                        from "./firebase.js";
+import { auth }                                      from "./firebase-auth.js";
+import { storage }                                   from "./firebase-storage.js";
 import { onAuthStateChanged, signOut }               from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, addDoc, updateDoc, query,
          where, getDocs, getDoc,
-         doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
 import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, nombreCategoria,
          optimizarImagen, avisoSinConexion }        from "./utilidades.js";
@@ -193,7 +195,7 @@ function crearFila(id, datos) {
     : "";
 
   fila.innerHTML = `
-    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura" loading="lazy">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
       <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>

@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso — Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
+  <!-- Red lenta: abre conexiones y baja Firebase en paralelo, sin esperar la cadena de imports -->
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="js/firebase.js">
+  <link rel="modulepreload" href="js/firebase-auth.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js">
   <style>
     .login-contenedor {
       min-height: 80vh;
@@ -163,10 +171,11 @@
   </main>
 
   <script type="module">
-    import { auth, db }                                        from "./js/firebase.js";
+    import { db }                                           from "./js/firebase.js";
+    import { auth }                                         from "./js/firebase-auth.js";
     import { signInWithEmailAndPassword, onAuthStateChanged,
              sendPasswordResetEmail }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-    import { doc, getDoc }                           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { doc, getDoc }                           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
 
     const formLogin    = document.getElementById("form-login");
     const btnEntrar    = document.getElementById("btn-entrar");

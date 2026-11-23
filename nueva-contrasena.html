@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nueva contraseña — Vigía Científico</title>
   <link rel="stylesheet" href="css/estilos.css">
+  <!-- Red lenta: abre conexiones y baja Firebase en paralelo, sin esperar la cadena de imports -->
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="js/firebase.js">
+  <link rel="modulepreload" href="js/firebase-auth.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js">
   <style>
     .login-contenedor {
       min-height: 80vh;
@@ -125,7 +131,7 @@
   </main>
 
   <script type="module">
-    import { auth }                      from "./js/firebase.js";
+    import { auth }                      from "./js/firebase-auth.js";
     import { confirmPasswordReset,
              verifyPasswordResetCode }   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 

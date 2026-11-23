@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
+  <!-- Red lenta: abre conexiones y baja Firebase en paralelo, sin esperar la cadena de imports -->
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com">
+  <link rel="modulepreload" href="js/firebase.js">
+  <link rel="modulepreload" href="js/utilidades.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js">
 </head>
 <body>
 
@@ -83,7 +90,7 @@
       <div class="explorar-panel" id="panel-mundo" data-categoria="mundo">
         <div class="mapa-contenedor">
           <div class="mapa-lienzo">
-            <img class="mapa-imagen" src="img/mapa.webp" width="1600" height="791" alt="Mapa mundial">
+            <img class="mapa-imagen" loading="lazy" decoding="async" src="img/mapa.webp" width="1600" height="791" alt="Mapa mundial">
             <svg class="mapa-overlay" viewBox="0 0 1600 791" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa mundial interactivo">
             <g class="continente" data-continente="america" data-nombre="América" tabindex="0" role="button">
               <path d="M 0,140 L 60,115 L 240,95 L 370,45 L 500,25 L 730,30 L 725,110 L 600,195 L 550,265 L 480,300 L 440,345 L 450,400 L 520,450 L 630,505 L 615,580 L 560,645 L 500,700 L 500,770 L 450,770 L 455,690 L 470,620 L 425,515 L 420,455 L 370,420 L 320,400 L 275,340 L 235,300 L 200,215 L 110,205 L 60,215 L 0,175 Z"/>
@@ -114,7 +121,7 @@
       <!-- INFORMÁTICA -->
       <div class="explorar-panel explorar-panel-oculto" id="panel-informatica">
         <div class="mapa-contenedor">
-          <img class="mapa-imagen" src="img/informatica.webp" width="1600" height="800" alt="Informática">
+          <img class="mapa-imagen" loading="lazy" decoding="async" src="img/informatica.webp" width="1600" height="800" alt="Informática">
           <div class="subcats-overlay">
             <button class="subcat-btn" data-cat="informatica" data-sub="hardware">Hardware</button>
             <button class="subcat-btn" data-cat="informatica" data-sub="software">Software</button>
@@ -129,7 +136,7 @@
       <!-- GASTRONOMÍA -->
       <div class="explorar-panel explorar-panel-oculto" id="panel-gastronomia">
         <div class="mapa-contenedor">
-          <img class="mapa-imagen" src="img/gastronomia.webp" width="1600" height="800" alt="Gastronomía">
+          <img class="mapa-imagen" loading="lazy" decoding="async" src="img/gastronomia.webp" width="1600" height="800" alt="Gastronomía">
           <div class="subcats-overlay">
             <button class="subcat-btn" data-cat="gastronomia" data-sub="recetas">Recetas</button>
             <button class="subcat-btn" data-cat="gastronomia" data-sub="cultura">Cultura</button>
@@ -143,7 +150,7 @@
       <!-- OCIO -->
       <div class="explorar-panel explorar-panel-oculto" id="panel-ocio">
         <div class="mapa-contenedor">
-          <img class="mapa-imagen" src="img/ocio.webp" width="1600" height="800" alt="Ocio">
+          <img class="mapa-imagen" loading="lazy" decoding="async" src="img/ocio.webp" width="1600" height="800" alt="Ocio">
           <div class="ocio-overlay">
             <button class="ocio-zona" data-cat="ocio" data-sub="cine">
               <span class="ocio-zona-label">Cine</span>
@@ -166,7 +173,7 @@
       <div class="explorar-panel explorar-panel-oculto" id="panel-geochisme" data-categoria="geochisme">
         <div class="mapa-contenedor">
           <div class="mapa-lienzo">
-            <img class="mapa-imagen" src="img/geochisme.webp" width="1600" height="791" alt="Mapa Geochisme dibujado con gis">
+            <img class="mapa-imagen" loading="lazy" decoding="async" src="img/geochisme.webp" width="1600" height="791" alt="Mapa Geochisme dibujado con gis">
             <svg class="mapa-overlay" viewBox="0 0 1600 791" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa Geochisme interactivo">
             <g class="continente" data-continente="america" data-nombre="América" tabindex="0" role="button">
               <path d="M 40,140 L 100,115 L 240,95 L 380,40 L 470,20 L 705,25 L 700,110 L 600,195 L 560,270 L 480,300 L 445,345 L 455,400 L 520,440 L 642,510 L 625,580 L 570,640 L 510,700 L 500,772 L 462,772 L 458,690 L 470,620 L 430,515 L 430,455 L 375,420 L 320,400 L 280,345 L 240,300 L 210,225 L 110,215 L 60,215 L 40,175 Z"/>

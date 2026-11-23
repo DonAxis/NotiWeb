@@ -1,9 +1,11 @@
 // editor.js — panel del editor (4 estados: borrador · aceptado · publicado · rechazado)
-import { auth, db, storage }                     from "./firebase.js";
+import { db }                                    from "./firebase.js";
+import { auth }                                  from "./firebase-auth.js";
+import { storage }                               from "./firebase-storage.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, doc, updateDoc, getDocs,
          getDoc, query, where, orderBy, addDoc,
-         deleteDoc, Timestamp }                  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         deleteDoc, Timestamp }                  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
 import { ref, uploadBytes, getDownloadURL }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, renderContenido,
          nombreCategoria, optimizarImagen,
@@ -172,7 +174,7 @@ function crearFila(id, datos, fecha, estado) {
     </button>` : "";
 
   fila.innerHTML = `
-    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura" loading="lazy">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
       <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>
@@ -210,8 +212,8 @@ function abrirVista(id, datos, estado) {
   const parte1   = renderContenido(parrafos.slice(0, mitad).join("\n\n"));
   const parte2   = renderContenido(parrafos.slice(mitad).join("\n\n"));
 
-  const img2 = urlSegura(datos.imagen2URL) ? `<img src="${urlSegura(datos.imagen2URL)}" alt="" class="art-imagen-extra">` : "";
-  const img3 = urlSegura(datos.imagen3URL) ? `<img src="${urlSegura(datos.imagen3URL)}" alt="" class="art-imagen-extra">` : "";
+  const img2 = urlSegura(datos.imagen2URL) ? `<img src="${urlSegura(datos.imagen2URL)}" alt="" class="art-imagen-extra" loading="lazy">` : "";
+  const img3 = urlSegura(datos.imagen3URL) ? `<img src="${urlSegura(datos.imagen3URL)}" alt="" class="art-imagen-extra" loading="lazy">` : "";
 
   let fechaTexto;
   if (estado === "publicado" && datos.fechaPublicacion) {
@@ -530,7 +532,7 @@ function crearFilaVida(id, datos, fecha) {
   const fila = document.createElement("div");
   fila.className = "articulo-fila articulo-fila-clickable";
   fila.innerHTML = `
-    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura">
+    <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura" loading="lazy">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
       <p class="articulo-fila-meta">Territorio estudiantil · ${fecha}<span data-lecturas="${escaparHTML(id)}"></span></p>

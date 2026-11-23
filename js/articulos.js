@@ -1,7 +1,7 @@
 // articulos.js — portada: últimas noticias, vida estudiantil, te puede interesar y explorar
 import { db } from "./firebase.js";
 import { collection, query, where, orderBy, limit, getDocs }
-  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
 import { escaparHTML, nombreCategoria } from "./utilidades.js";
 
 // style.backgroundImage no decodifica entidades HTML: aquí la URL va cruda, solo http(s) y sin comillas

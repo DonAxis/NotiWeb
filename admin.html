@@ -6,6 +6,14 @@
   <title>Panel Admin — Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
   <link rel="stylesheet" href="css/panel.css">
+  <!-- Red lenta: abre conexiones y baja Firebase en paralelo, sin esperar la cadena de imports -->
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="js/firebase.js">
+  <link rel="modulepreload" href="js/firebase-auth.js">
+  <link rel="modulepreload" href="js/utilidades.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js">
   <style>
     .tabla-usuarios {
       width: 100%;

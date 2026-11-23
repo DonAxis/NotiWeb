@@ -1,7 +1,7 @@
 // interacciones.js — reacciones públicas y contador de lecturas (privado para staff/autor)
 import { db } from "./firebase.js";
 import { doc, getDoc, setDoc, increment }
-  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
 
 // Claves permitidas también en firestore.rules (match /reacciones) — mantener sincronizadas
 export const REACCIONES = {

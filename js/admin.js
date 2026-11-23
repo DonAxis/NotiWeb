@@ -1,10 +1,11 @@
 // admin.js — panel del administrador
-import { auth, db }                              from "./firebase.js";
+import { db }                                    from "./firebase.js";
+import { auth }                                  from "./firebase-auth.js";
 import { onAuthStateChanged, signOut }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { collection, doc, setDoc, updateDoc,
          getDocs, deleteDoc, getDoc,
          query, where, writeBatch,
-         Timestamp }                             from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+         Timestamp }                             from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
 import { escaparHTML, avisoSinConexion }         from "./utilidades.js";
 
 // --- PROTECCIÓN DE RUTA ---

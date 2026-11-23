@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Artículo — Gaceta ILB</title>
   <link rel="stylesheet" href="css/estilos.css">
+  <!-- Red lenta: abre conexiones y baja Firebase en paralelo, sin esperar la cadena de imports -->
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com">
+  <link rel="modulepreload" href="js/firebase.js">
+  <link rel="modulepreload" href="js/utilidades.js">
+  <link rel="modulepreload" href="js/interacciones.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js">
   <style>
     .articulo-pagina {
       max-width: 720px;
@@ -152,7 +160,7 @@
 
   <script type="module">
     import { db }          from "./js/firebase.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
     import { escaparHTML, urlSegura, renderContenido, nombreCategoria } from "./js/utilidades.js";
     import { registrarLectura, montarReacciones } from "./js/interacciones.js";
 
@@ -200,8 +208,8 @@
         if (links) fuentesHTML = `<div class="art-fuentes"><strong>Fuentes</strong>${links}</div>`;
       }
 
-      const img2 = urlSegura(a.imagen2URL) ? `<img src="${urlSegura(a.imagen2URL)}" alt="" class="art-imagen-extra">` : "";
-      const img3 = urlSegura(a.imagen3URL) ? `<img src="${urlSegura(a.imagen3URL)}" alt="" class="art-imagen-extra">` : "";
+      const img2 = urlSegura(a.imagen2URL) ? `<img src="${urlSegura(a.imagen2URL)}" alt="" class="art-imagen-extra" loading="lazy">` : "";
+      const img3 = urlSegura(a.imagen3URL) ? `<img src="${urlSegura(a.imagen3URL)}" alt="" class="art-imagen-extra" loading="lazy">` : "";
       const portada = urlSegura(a.imagenURL)
         ? `<img src="${urlSegura(a.imagenURL)}" alt="${escaparHTML(a.titulo)}" class="art-imagen-principal">` : "";
 
