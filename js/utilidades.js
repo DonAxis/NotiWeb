@@ -21,6 +21,19 @@ export function renderContenido(texto) {
   return escaparHTML(texto).replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>");
 }
 
+// Aviso fijo para fallas de red: sin él, los paneles se quedan en "Cargando..." para siempre
+export function avisoSinConexion(texto = "No se pudo conectar. Revisa tu internet.") {
+  if (document.getElementById("aviso-conexion")) return;
+  const aviso = document.createElement("div");
+  aviso.id        = "aviso-conexion";
+  aviso.className = "aviso-conexion";
+  aviso.setAttribute("role", "alert");
+  aviso.innerHTML = `<span></span><button type="button">Reintentar</button>`;
+  aviso.querySelector("span").textContent = texto;
+  aviso.querySelector("button").addEventListener("click", () => location.reload());
+  document.body.appendChild(aviso);
+}
+
 const NOMBRES_CATEGORIA = {
   mundo:            "Mundo",
   informatica:      "Informática",

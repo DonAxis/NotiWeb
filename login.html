@@ -136,7 +136,8 @@
           <label for="contrasena">Contraseña</label>
           <input type="password" id="contrasena" required autocomplete="current-password" placeholder="••••••••">
         </div>
-        <button type="submit" class="btn-entrar" id="btn-entrar">Entrar</button>
+        <!-- disabled hasta que cargue el JS: si se envía antes, el navegador recarga la página vacía -->
+        <button type="submit" class="btn-entrar" id="btn-entrar" disabled>Cargando…</button>
       </form>
 
       <span class="link-olvide" id="link-olvide">¿Olvidaste tu contraseña?</span>
@@ -147,7 +148,7 @@
           <label for="correo-reset">Correo de tu cuenta</label>
           <input type="email" id="correo-reset" placeholder="correo@ejemplo.com">
         </div>
-        <button class="btn-entrar" id="btn-reset">Enviar enlace</button>
+        <button class="btn-entrar" id="btn-reset" disabled>Enviar enlace</button>
         <p class="reset-ok" id="reset-ok">Correo enviado. Revisa tu bandeja de entrada.</p>
         <p class="login-error" id="reset-error"></p>
       </div>
@@ -163,7 +164,7 @@
 
   <script type="module">
     import { auth, db }                                        from "./js/firebase.js";
-    import { signInWithEmailAndPassword,
+    import { signInWithEmailAndPassword, onAuthStateChanged,
              sendPasswordResetEmail }                          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
     import { doc, getDoc }                           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
@@ -172,6 +173,8 @@
     const mensajeError = document.getElementById("login-error");
     const cargando     = document.getElementById("login-cargando");
 
+    const MSG_RED = "No se pudo conectar. Revisa tu internet e intenta de nuevo.";
+
     function mostrarError(texto) {
       mensajeError.textContent  = texto;
       mensajeError.style.display = "block";
@@ -179,9 +182,60 @@
       btnEntrar.disabled        = false;
     }
 
+    // Lleva al panel según el rol; se usa al iniciar sesión y si ya había una sesión abierta
+    async function entrarSegunRol(uid) {
+      const snap = await getDoc(doc(db, "usuarios", uid));
+
+      if (!snap.exists()) {
+        await auth.signOut();
+        mostrarError("Tu cuenta no tiene acceso al portal. Contacta al administrador.");
+        return;
+      }
+
+      const rolUsuario = snap.data().rol;
+
+      if (rolUsuario === "escritor") {
+        window.location.href = "escritor/index.html";
+      } else if (rolUsuario === "editor") {
+        window.location.href = "editor/index.html";
+      } else if (rolUsuario === "admin") {
+        window.location.href = "admin.html";
+      } else if (rolUsuario === "pendiente") {
+        await auth.signOut();
+        mostrarError("Tu solicitud aún no ha sido aprobada. El equipo editorial te avisará cuando tengas acceso.");
+      } else if (rolUsuario === "bloqueado") {
+        await auth.signOut();
+        mostrarError("Tu cuenta no tiene acceso al portal. Contacta al administrador.");
+      } else {
+        await auth.signOut();
+        mostrarError("Rol no reconocido. Contacta al administrador.");
+      }
+    }
+
+    // Solo la primera notificación (estado al abrir la página); el login normal lo maneja el submit
+    const dejarDeEscuchar = onAuthStateChanged(auth, async (usuario) => {
+      dejarDeEscuchar();
+      if (!usuario) {
+        btnEntrar.disabled    = false;
+        btnEntrar.textContent = "Entrar";
+        return;
+      }
+      btnEntrar.textContent  = "Entrar";
+      cargando.textContent   = "Ya tienes sesión abierta, entrando...";
+      cargando.style.display = "block";
+      try {
+        await entrarSegunRol(usuario.uid);
+      } catch (error) {
+        console.error(error);
+        mostrarError(MSG_RED);
+      }
+    });
+    document.getElementById("btn-reset").disabled = false;
+
     formLogin.addEventListener("submit", async (e) => {
       e.preventDefault();
       mensajeError.style.display = "none";
+      cargando.textContent       = "Verificando acceso...";
       cargando.style.display     = "block";
       btnEntrar.disabled         = true;
 
@@ -190,44 +244,17 @@
 
       try {
         const resultado = await signInWithEmailAndPassword(auth, correo, contrasena);
-        const uid       = resultado.user.uid;
-
-        // Verificar rol en Firestore
-        const snap = await getDoc(doc(db, "usuarios", uid));
-
-        if (!snap.exists()) {
-          await auth.signOut();
-          mostrarError("Tu cuenta no tiene acceso al portal. Contacta al administrador.");
-          return;
-        }
-
-        const rolUsuario = snap.data().rol;
-
-        if (rolUsuario === "escritor") {
-          window.location.href = "escritor/index.html";
-        } else if (rolUsuario === "editor") {
-          window.location.href = "editor/index.html";
-        } else if (rolUsuario === "admin") {
-          window.location.href = "admin.html";
-        } else if (rolUsuario === "pendiente") {
-          await auth.signOut();
-          mostrarError("Tu solicitud aún no ha sido aprobada. El equipo editorial te avisará cuando tengas acceso.");
-        } else if (rolUsuario === "bloqueado") {
-          await auth.signOut();
-          mostrarError("Tu cuenta no tiene acceso al portal. Contacta al administrador.");
-        } else {
-          await auth.signOut();
-          mostrarError("Rol no reconocido. Contacta al administrador.");
-        }
-
+        await entrarSegunRol(resultado.user.uid);
       } catch (error) {
         // Mensajes de error legibles en español
         const codigos = {
-          "auth/invalid-credential":   "Correo o contraseña incorrectos.",
-          "auth/user-not-found":        "No existe una cuenta con ese correo.",
-          "auth/wrong-password":        "Contraseña incorrecta.",
-          "auth/too-many-requests":     "Demasiados intentos. Espera unos minutos.",
-          "auth/user-disabled":         "Esta cuenta ha sido deshabilitada.",
+          "auth/invalid-credential":     "Correo o contraseña incorrectos.",
+          "auth/user-not-found":         "No existe una cuenta con ese correo.",
+          "auth/wrong-password":         "Contraseña incorrecta.",
+          "auth/too-many-requests":      "Demasiados intentos. Espera unos minutos.",
+          "auth/user-disabled":          "Esta cuenta ha sido deshabilitada.",
+          "auth/network-request-failed": MSG_RED,
+          "unavailable":                 MSG_RED, // Firestore sin conexión al leer el rol
         };
         mostrarError(codigos[error.code] ?? "Error al iniciar sesión. Intenta de nuevo.");
         console.error(error);
@@ -262,6 +289,7 @@
         const codigos = {
           "auth/user-not-found":  "No existe una cuenta con ese correo.",
           "auth/invalid-email":   "El correo no es válido.",
+          "auth/network-request-failed": MSG_RED,
         };
         errMsg.textContent  = codigos[error.code] ?? "Error al enviar. Intenta de nuevo.";
         errMsg.style.display = "block";

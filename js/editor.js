@@ -6,7 +6,8 @@ import { collection, doc, updateDoc, getDocs,
          deleteDoc, Timestamp }                  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, renderContenido,
-         nombreCategoria, optimizarImagen }      from "./utilidades.js";
+         nombreCategoria, optimizarImagen,
+         avisoSinConexion }                      from "./utilidades.js";
 import { pintarLecturas }                        from "./interacciones.js";
 
 const MAX_DESTACADOS  = 5;
@@ -28,7 +29,15 @@ onAuthStateChanged(auth, async (usuario) => {
     return;
   }
 
-  const snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  let snap;
+  try {
+    snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  } catch (error) {
+    console.error(error);
+    document.querySelectorAll(".lista-vacia").forEach(p => { p.textContent = "Sin conexión."; });
+    avisoSinConexion();
+    return;
+  }
   const rol  = snap.exists() ? snap.data().rol : null;
 
   if (rol === "escritor") {
@@ -74,6 +83,7 @@ async function cargarPendientes() {
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
+    avisoSinConexion("No se pudieron cargar los artículos. Revisa tu internet.");
   }
 }
 
@@ -89,6 +99,7 @@ async function cargarAceptados() {
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
+    avisoSinConexion("No se pudieron cargar los artículos. Revisa tu internet.");
   }
 }
 
@@ -104,6 +115,7 @@ async function cargarRechazados() {
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
+    avisoSinConexion("No se pudieron cargar los artículos. Revisa tu internet.");
   }
 }
 
@@ -122,6 +134,7 @@ async function cargarPublicados(categoria) {
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
+    avisoSinConexion("No se pudieron cargar los artículos. Revisa tu internet.");
   }
 }
 
@@ -509,6 +522,7 @@ async function cargarVidaEstudiantil() {
   } catch (error) {
     lista.innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
     console.error(error);
+    avisoSinConexion("No se pudieron cargar los artículos. Revisa tu internet.");
   }
 }
 

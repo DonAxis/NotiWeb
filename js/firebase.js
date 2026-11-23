@@ -3,7 +3,10 @@
 
 import { initializeApp }     from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getFirestore }      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-import { getAuth }           from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import { initializeAuth,
+         indexedDBLocalPersistence,
+         browserLocalPersistence,
+         browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { getStorage }        from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 
 export const firebaseConfig = {
@@ -19,5 +22,10 @@ export const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const db      = getFirestore(app);
-export const auth    = getAuth(app);
+// initializeAuth en vez de getAuth: getAuth trae el soporte de login con Google (popups),
+// que en celular/Safari carga apis.google.com + un iframe de firebaseapp.com ANTES de
+// poder iniciar sesión. Solo usamos correo/contraseña. Persistencia igual a la de getAuth.
+export const auth    = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence]
+});
 export const storage = getStorage(app);

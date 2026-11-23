@@ -6,7 +6,7 @@ import { collection, addDoc, updateDoc, query,
          doc, Timestamp }                            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL }          from "https://www.gstatic.com/firebasejs/11.6.0/firebase-storage.js";
 import { escaparHTML, urlSegura, nombreCategoria,
-         optimizarImagen }                          from "./utilidades.js";
+         optimizarImagen, avisoSinConexion }        from "./utilidades.js";
 import { pintarLecturas }                         from "./interacciones.js";
 
 // Reglas de Firebase Storage requeridas en la consola:
@@ -74,7 +74,15 @@ onAuthStateChanged(auth, async (usuario) => {
     return;
   }
 
-  const snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  let snap;
+  try {
+    snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  } catch (error) {
+    console.error(error);
+    document.getElementById("lista-borrador").innerHTML = "<p class='lista-vacia'>Sin conexión.</p>";
+    avisoSinConexion();
+    return;
+  }
   const rol  = snap.exists() ? snap.data().rol : null;
 
   if (rol === "editor") {
@@ -153,6 +161,8 @@ async function cargarArticulos() {
 
   } catch (error) {
     console.error("Error al cargar artículos:", error);
+    document.getElementById("lista-borrador").innerHTML = "<p class='lista-vacia'>Error al cargar.</p>";
+    avisoSinConexion("No se pudieron cargar tus artículos. Revisa tu internet.");
   }
 }
 

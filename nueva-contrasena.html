@@ -103,7 +103,7 @@
           <label for="confirmar">Confirmar contraseña</label>
           <input type="password" id="confirmar" placeholder="Repite la contraseña">
         </div>
-        <button class="btn-guardar" id="btn-guardar">Guardar contraseña</button>
+        <button class="btn-guardar" id="btn-guardar" disabled>Cargando…</button>
         <p class="mensaje mensaje-error" id="msg-error" style="display:none;"></p>
       </div>
 
@@ -133,6 +133,10 @@
     const params  = new URLSearchParams(window.location.search);
     const modo    = params.get("mode");
     const codigo  = params.get("oobCode");
+
+    const btnListo = document.getElementById("btn-guardar");
+    btnListo.disabled    = false;
+    btnListo.textContent = "Guardar contraseña";
 
     // Verificar que el link sea válido antes de mostrar el formulario
     if (modo !== "resetPassword" || !codigo) {
@@ -176,6 +180,7 @@
           "auth/expired-action-code":  "El enlace expiró. Solicita uno nuevo.",
           "auth/invalid-action-code":  "El enlace no es válido.",
           "auth/weak-password":        "La contraseña debe tener al menos 6 caracteres.",
+          "auth/network-request-failed": "No se pudo conectar. Revisa tu internet e intenta de nuevo.",
         };
         msgError.textContent  = codigos[error.code] ?? "Error al guardar. Intenta de nuevo.";
         msgError.style.display = "block";

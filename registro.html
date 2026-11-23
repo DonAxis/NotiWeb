@@ -196,7 +196,8 @@
           </div>
         </div>
 
-        <button type="submit" class="btn-enviar" id="btn-enviar">Enviar solicitud</button>
+        <!-- disabled hasta que cargue el JS: si se envía antes, el navegador recarga la página vacía -->
+        <button type="submit" class="btn-enviar" id="btn-enviar" disabled>Cargando…</button>
       </form>
 
       <div class="form-ok" id="form-ok">
@@ -218,6 +219,8 @@
     const btnEnv   = document.getElementById("btn-enviar");
     const msgOk    = document.getElementById("form-ok");
     const msgError = document.getElementById("form-error");
+    btnEnv.disabled    = false;
+    btnEnv.textContent = "Enviar solicitud";
 
     // --- OJO: toggle mostrar/ocultar contraseña ---
     const SVG_OJO_ABIERTO = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -285,6 +288,7 @@
           "auth/email-already-in-use": "Ese correo ya está registrado.",
           "auth/invalid-email":        "El correo no es válido.",
           "auth/weak-password":        "La contraseña debe tener al menos 6 caracteres.",
+          "auth/network-request-failed": "No se pudo conectar. Revisa tu internet e intenta de nuevo.",
         };
         mostrarError(codigos[error.code] ?? "Error al enviar la solicitud. Intenta de nuevo.");
         console.error(error);

@@ -5,7 +5,7 @@ import { collection, doc, setDoc, updateDoc,
          getDocs, deleteDoc, getDoc,
          query, where, writeBatch,
          Timestamp }                             from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-import { escaparHTML }                           from "./utilidades.js";
+import { escaparHTML, avisoSinConexion }         from "./utilidades.js";
 
 // --- PROTECCIÓN DE RUTA ---
 onAuthStateChanged(auth, async (usuario) => {
@@ -15,7 +15,14 @@ onAuthStateChanged(auth, async (usuario) => {
   }
 
   // Verificar que sea admin
-  const snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  let snap;
+  try {
+    snap = await getDoc(doc(db, "usuarios", usuario.uid));
+  } catch (error) {
+    console.error(error);
+    avisoSinConexion();
+    return;
+  }
   if (!snap.exists() || snap.data().rol !== "admin") {
     await signOut(auth);
     window.location.href = "login.html";
