@@ -60,7 +60,7 @@ async function cargarReporte() {
     const titulos  = {};          // idArticulo → { titulo, autor }
 
     const conteo    = { borrador: 0, aceptado: 0, publicado: 0, rechazado: 0, total: 0 };
-    const porAutor  = {}; // uid → { aceptado: N, publicado: N }
+    const porAutor  = {}; // uid → { aceptado, publicado, lecturas, territorio }
 
     snap.forEach(documento => {
       const datos = documento.data();
@@ -69,8 +69,9 @@ async function cargarReporte() {
       if (datos.estado in conteo) conteo[datos.estado]++;
 
       if (datos.uid && (datos.estado === "aceptado" || datos.estado === "publicado")) {
-        if (!porAutor[datos.uid]) porAutor[datos.uid] = { aceptado: 0, publicado: 0, lecturas: 0 };
+        if (!porAutor[datos.uid]) porAutor[datos.uid] = { aceptado: 0, publicado: 0, lecturas: 0, territorio: 0 };
         porAutor[datos.uid][datos.estado]++;
+        if (datos.categoria === "vida_estudiantil") porAutor[datos.uid].territorio++;
         porAutor[datos.uid].lecturas += lecturas[documento.id] ?? 0;
       }
     });
@@ -106,12 +107,14 @@ async function cargarReporte() {
       (porAutor[b].aceptado  - porAutor[a].aceptado)
     );
 
+    // Territorio estudiantil es prioritario: el admin debe ver de un vistazo quién publica ahí
     const filas = ordenados.map(uid => `
-      <tr>
+      <tr${porAutor[uid].territorio ? ' class="fila-territorio"' : ""}>
         <td>${escaparHTML(nombres[uid])}</td>
         <td style="text-align:center;">${porAutor[uid].aceptado}</td>
         <td style="text-align:center; color:#1565c0; font-weight:700;">${porAutor[uid].publicado}</td>
         <td style="text-align:center;">${porAutor[uid].lecturas}</td>
+        <td style="text-align:center;">${porAutor[uid].territorio ? `<span class="etiqueta-territorio">${porAutor[uid].territorio}</span>` : "—"}</td>
       </tr>`).join("");
 
     contenedor.innerHTML = `
@@ -122,6 +125,7 @@ async function cargarReporte() {
             <th style="text-align:center;">Aceptados</th>
             <th style="text-align:center;">Publicados</th>
             <th style="text-align:center;">👁 Lecturas</th>
+            <th style="text-align:center; color:var(--territorio);">Territorio estudiantil</th>
           </tr>
         </thead>
         <tbody>${filas}</tbody>

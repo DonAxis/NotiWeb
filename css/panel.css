@@ -152,6 +152,34 @@
 }
 .articulo-fila-clickable:hover { background: #fafafa; }
 
+/* Territorio estudiantil: sección prioritaria, debe distinguirse en las listas del editor y del admin */
+:root {
+  --territorio:       #00796b;
+  --territorio-fondo: #e0f2ef;
+}
+.fila-territorio {
+  background: var(--territorio-fondo);
+  box-shadow: inset 5px 0 0 var(--territorio);
+}
+.fila-territorio.articulo-fila-clickable:hover { background: #cdeae5; }
+/* En tablas la sombra del <tr> no se pinta de forma fiable: va en la primera celda */
+tr.fila-territorio { box-shadow: none; }
+tr.fila-territorio td:first-child {
+  box-shadow: inset 5px 0 0 var(--territorio);
+  font-weight: 700;
+}
+.etiqueta-territorio {
+  display: inline-block;
+  background: var(--territorio);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
 .articulo-miniatura {
   width: 80px;
   height: 56px;

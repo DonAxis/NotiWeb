@@ -159,7 +159,11 @@ function renderLista(lista, snap, estado, msgVacio) {
 // --- CREAR FILA ---
 function crearFila(id, datos, fecha, estado) {
   const fila = document.createElement("div");
-  fila.className = "articulo-fila articulo-fila-clickable";
+  const territorio = datos.categoria === "vida_estudiantil";
+  fila.className = "articulo-fila articulo-fila-clickable" + (territorio ? " fila-territorio" : "");
+  const categoriaHTML = territorio
+    ? `<span class="etiqueta-territorio">${escaparHTML(nombreCategoria(datos.categoria))}</span>`
+    : escaparHTML(nombreCategoria(datos.categoria));
 
   const badges = {
     borrador:  `<span class="estado-borrador">Pendiente</span>`,
@@ -177,7 +181,7 @@ function crearFila(id, datos, fecha, estado) {
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura" loading="lazy">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
-      <p class="articulo-fila-meta">${escaparHTML(nombreCategoria(datos.categoria))} · ${fecha}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>
+      <p class="articulo-fila-meta">${categoriaHTML} · ${fecha}${estado === "publicado" ? `<span data-lecturas="${escaparHTML(id)}"></span>` : ""}</p>
     </div>
     ${badges[estado] ?? ""}
     ${btnDestHTML}`;
@@ -530,12 +534,12 @@ async function cargarVidaEstudiantil() {
 
 function crearFilaVida(id, datos, fecha) {
   const fila = document.createElement("div");
-  fila.className = "articulo-fila articulo-fila-clickable";
+  fila.className = "articulo-fila articulo-fila-clickable fila-territorio";
   fila.innerHTML = `
     <img src="${urlSegura(datos.imagenURL)}" alt="${escaparHTML(datos.titulo)}" class="articulo-miniatura" loading="lazy">
     <div class="articulo-fila-info">
       <p class="articulo-fila-titulo">${escaparHTML(datos.titulo)}</p>
-      <p class="articulo-fila-meta">Territorio estudiantil · ${fecha}<span data-lecturas="${escaparHTML(id)}"></span></p>
+      <p class="articulo-fila-meta"><span class="etiqueta-territorio">Territorio estudiantil</span> · ${fecha}<span data-lecturas="${escaparHTML(id)}"></span></p>
     </div>
     <span class="estado-publicado">Publicado</span>`;
   fila.addEventListener("click", () => abrirFormVida(id, datos));
