@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gaceta ILB</title>
-  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="css/estilos.css?v=2">
   <!-- Red lenta: abre conexiones y baja Firebase en paralelo, sin esperar la cadena de imports -->
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://firebasestorage.googleapis.com">
@@ -22,7 +22,7 @@
       <nav class="nav-principal">
         <a href="#">Últimas noticias</a>
         <a href="#">Avisos</a>
-        <a href="#">Territorio Estudiantil</a>
+        <a href="#seccion-territorio">Territorio Estudiantil</a>
         <a href="#seccion-eventos">Eventos</a>
         <a href="login.html">Escritores</a>
       </nav>
@@ -30,6 +30,24 @@
   </header>
 
   <main class="contenedor">
+
+    <!-- SECCIÓN: TERRITORIO ESTUDIANTIL -->
+    <!-- Va primero por ser la sección prioritaria; oculta hasta que haya publicaciones (articulos.js) -->
+    <section class="seccion" id="seccion-territorio" style="display:none;">
+      <h2 class="seccion-titulo">TERRITORIO ESTUDIANTIL</h2>
+      <div class="territorio">
+        <a id="territorio-principal" class="territorio-principal">
+          <div class="territorio-imagen"></div>
+          <div class="territorio-texto">
+            <h3 class="territorio-titulo"></h3>
+            <p class="territorio-fecha"></p>
+            <p class="territorio-extracto"></p>
+            <span class="territorio-leer">Leer más →</span>
+          </div>
+        </a>
+        <ul id="territorio-lista" class="territorio-lista"></ul>
+      </div>
+    </section>
 
     <!-- SECCIÓN: ÚLTIMAS NOTICIAS -->
     <!-- Los artículos se insertan dinámicamente desde Firestore via articulos.js -->
@@ -47,17 +65,6 @@
           <article class="articulo"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
           <article class="articulo"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
         </div>
-      </div>
-    </section>
-
-    <!-- SECCIÓN: CIENCIA Y TECNOLOGÍA -->
-    <!-- Los artículos se insertan dinámicamente desde Firestore via articulos.js -->
-    <section class="seccion">
-      <h2 class="seccion-titulo">TERRITORIO ESTUDIANTIL</h2>
-      <div id="grid-vida" class="grid-dos">
-        <article class="articulo articulo-mediano"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
-        <article class="articulo articulo-mediano"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
-        <article class="articulo articulo-mediano"><div class="articulo-overlay"><p class="articulo-titulo"></p></div></article>
       </div>
     </section>
 
@@ -218,6 +225,6 @@
     <p>© 2026 Gaceta ILB — Instituto ILB</p>
   </footer>
 
-  <script type="module" src="js/articulos.js"></script>
+  <script type="module" src="js/articulos.js?v=2"></script>
 </body>
 </html>

@@ -172,7 +172,8 @@ function crearFila(id, datos, fecha, estado) {
     rechazado: `<span class="estado-rechazado">Rechazado</span>`,
   };
 
-  const btnDestHTML = estado === "publicado" ? `
+  // Destacar solo alimenta "Te puede interesar", donde Territorio estudiantil no aparece
+  const btnDestHTML = estado === "publicado" && !territorio ? `
     <button class="btn-destacado ${datos.destacado ? "btn-destacado-activo" : ""}" data-id="${id}">
       ${datos.destacado ? "★ Destacado" : "☆ Destacar"}
     </button>` : "";

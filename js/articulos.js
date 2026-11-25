@@ -1,4 +1,4 @@
-// articulos.js — portada: últimas noticias, vida estudiantil, te puede interesar y explorar
+// articulos.js — portada: territorio estudiantil, últimas noticias, te puede interesar y explorar
 import { db } from "./firebase.js";
 import { collection, query, where, orderBy, limit, getDocs }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-lite.js";
@@ -12,7 +12,12 @@ const fondo = (url) => {
 
 const NUM_ULTIMAS   = 5;
 const MAX_INTERESAR = 8;
-const CATEGORIAS_VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "geochisme", "vida_estudiantil"];
+// Territorio estudiantil (vida_estudiantil) NO entra aquí: tiene su propia sección y no se mezcla con las demás
+const CATEGORIAS_VALIDAS = ["mundo", "informatica", "gastronomia", "ocio", "geochisme"];
+
+const fechaCorta = (a) => a.fechaPublicacion?.toDate().toLocaleDateString("es-MX", {
+  day: "numeric", month: "short", year: "numeric"
+}) ?? "";
 
 // --- PORTADA: una sola consulta alimenta ÚLTIMAS NOTICIAS y TE PUEDE INTERESAR ---
 async function cargarPortada() {
@@ -23,7 +28,8 @@ async function cargarPortada() {
       orderBy("fechaPublicacion", "desc"),
       limit(60)
     ));
-    const todos = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    const todos = snap.docs.map(d => ({ _id: d.id, ...d.data() }))
+      .filter(a => a.categoria !== "vida_estudiantil");
     pintarUltimas(todos.slice(0, NUM_ULTIMAS));
     pintarInteresar(todos.slice(NUM_ULTIMAS));
   } catch (error) {
@@ -55,43 +61,49 @@ function pintarUltimas(articulos) {
   });
 }
 
-// --- VIDA ESTUDIANTIL (3 más recientes) ---
-async function cargarVidaEstudiantil() {
+// --- TERRITORIO ESTUDIANTIL: la más reciente con extracto + 2 anteriores en lista ---
+const PALABRAS_EXTRACTO = 30;
+
+function extracto(texto) {
+  const palabras = String(texto ?? "").replace(/\*\*/g, "").split(/\s+/).filter(Boolean);
+  return palabras.slice(0, PALABRAS_EXTRACTO).join(" ") + (palabras.length > PALABRAS_EXTRACTO ? "…" : "");
+}
+
+async function cargarTerritorio() {
   try {
-    const q = query(
+    const snap = await getDocs(query(
       collection(db, "articulos"),
       where("estado", "==", "publicado"),
       where("categoria", "==", "vida_estudiantil"),
       orderBy("fechaPublicacion", "desc"),
       limit(3)
-    );
-    const snap = await getDocs(q);
-    const articulos = [];
-    snap.forEach(doc => articulos.push({ _id: doc.id, ...doc.data() }));
+    ));
+    const articulos = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    // Sin publicaciones la sección no aparece: un "Próximamente" hasta arriba se ve abandonado
+    if (articulos.length === 0) return;
 
-    const grid     = document.getElementById("grid-vida");
-    const tarjetas = grid.querySelectorAll(".articulo");
+    const [principal, ...resto] = articulos;
+    const enlace = document.getElementById("territorio-principal");
+    enlace.href = `articulo.html?id=${encodeURIComponent(principal._id)}`;
+    enlace.querySelector(".territorio-imagen").style.backgroundImage = fondo(principal.imagenURL);
+    enlace.querySelector(".territorio-titulo").textContent   = principal.titulo;
+    enlace.querySelector(".territorio-fecha").textContent    = fechaCorta(principal);
+    enlace.querySelector(".territorio-extracto").textContent = extracto(principal.contenido);
 
-    if (articulos.length === 0) {
-      grid.style.display = "block";
-      grid.style.height  = "auto";
-      grid.innerHTML = "<p class='mundo-vacio' style='height:auto; padding:24px 0;'>Próximamente publicaciones de Territorio estudiantil.</p>";
-      return;
+    const lista = document.getElementById("territorio-lista");
+    if (resto.length === 0) {
+      lista.remove();
+    } else {
+      lista.innerHTML = resto.map(a => `
+        <li><a href="articulo.html?id=${encodeURIComponent(a._id)}">
+          <span class="territorio-lista-titulo">${escaparHTML(a.titulo)}</span>
+          <span class="territorio-fecha">${escaparHTML(fechaCorta(a))}</span>
+        </a></li>`).join("");
     }
-    tarjetas.forEach((t, i) => { if (i >= articulos.length) t.style.display = "none"; });
 
-    articulos.forEach((a, i) => {
-      if (!tarjetas[i]) return;
-      tarjetas[i].style.backgroundImage = fondo(a.imagenURL);
-      tarjetas[i].querySelector(".articulo-titulo").textContent = a.titulo;
-      tarjetas[i].style.cursor = "pointer";
-      tarjetas[i].addEventListener("click", () => {
-        window.location.href = `articulo.html?id=${a._id}`;
-      });
-    });
-
+    document.getElementById("seccion-territorio").style.display = "";
   } catch (error) {
-    console.error("Error al cargar vida estudiantil:", error);
+    console.error("Error al cargar territorio estudiantil:", error);
   }
 }
 
@@ -123,9 +135,7 @@ function pintarInteresar(candidatos) {
 
   carrusel.innerHTML = "";
   elegidos.forEach(a => {
-    const fecha = a.fechaPublicacion?.toDate().toLocaleDateString("es-MX", {
-      day: "numeric", month: "short", year: "numeric"
-    }) ?? "";
+    const fecha = fechaCorta(a);
     const tarjeta = document.createElement("a");
     tarjeta.className = "tarjeta";
     tarjeta.href      = `articulo.html?id=${encodeURIComponent(a._id)}`;
@@ -295,4 +305,4 @@ document.querySelectorAll(".explorar-tab").forEach(tab => {
 
 // --- INICIALIZAR ---
 cargarPortada();
-cargarVidaEstudiantil();
+cargarTerritorio();
